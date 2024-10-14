@@ -1,0 +1,88 @@
+import sys, os
+from TranslationFunctions import push_instruction,\
+                                 pop_instruction,\
+                                 arithmetic_logical_instruction,\
+                                 label,\
+                                 goto_instruction,\
+                                 if_goto_instruction,\
+                                 call_instruction,\
+                                 function_instruction,\
+                                 return_instruction,\
+                                 OPS_MAP,\
+                                 INFINITE_LOOP
+
+class Translator:
+    def __init__(self, input_file: str):
+        self.input_file = input_file
+        if input_file.endswith("/") or input_file.endswith("\\"):
+            input_file = input_file[:-1]
+        path = os.path.basename(input_file).rsplit('.', 1) # remove ".asm" from filename
+        if path[1] != "vm":
+            print("ERROR: file type should be .vm")
+            exit(1)
+        self.name = path[0]
+        self.output_file = input_file.replace('.vm', '.asm')
+        self.instructions = []
+        self.asm_instructions = []
+
+    def parse_file(self):
+        """Reads the input file and strips out comments and whitespace."""
+        with open(self.input_file, 'r') as file:
+            for line in file:
+                clean_line = self.clean_line(line)
+                if clean_line:
+                    self.instructions.append(clean_line)
+
+    def clean_line(self, line: str):
+        """Removes comments and whitespace from a line."""
+        line = line.split('//')[0]  # remove comments
+        return line.strip()  # remove whitespace
+    
+    def write_output(self):
+        """Writes the binary instructions to the output file."""
+        instructions = "\n".join(self.asm_instructions)
+        with open(self.output_file, 'w') as file:
+            file.write(instructions)
+
+    
+    def translate(self):
+        """Coordinates the VM translation process."""
+        self.parse_file()
+        for i, instruction in enumerate(self.instructions):
+            try:
+                args = instruction.split(" ")
+                if args[0] == "label":
+                    self.asm_instructions.append(label(args[1]))
+                elif args[0] == "goto":
+                    self.asm_instructions.append(goto_instruction(args[1]))
+                elif args[0] == "if-goto":
+                    self.asm_instructions.append(if_goto_instruction(args[1]))
+                elif args[0] == "call":
+                    self.asm_instructions.append(call_instruction(args[1], args[2]))
+                elif args[0] == "function":
+                    self.asm_instructions.append(if_goto_instruction(args[1], args[2]))
+                elif args[0] == "return":
+                    self.asm_instructions.append(return_instruction())
+                elif args[0] == "push":
+                    self.asm_instructions.append(push_instruction(args[1], args[2], self.name))
+                elif args[0] == "pop":
+                    self.asm_instructions.append(pop_instruction(args[1], args[2], self.name))
+                elif args[0] in set(OPS_MAP.keys()).union(set(["neg", "not"])): # arithmetic/logical operation instruction
+                    self.asm_instructions.append(arithmetic_logical_instruction(args[0]))
+            except Exception as e:
+                print(f"failed on line {i+1}: {e}")
+                exit(1)
+        self.asm_instructions.append(INFINITE_LOOP)
+    
+        
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python3 VMTranslator.py <file.vm>")
+        sys.exit(1)
+
+    input_file = sys.argv[1]
+    translator = Translator(input_file)
+    print(f"Starting VM translation of {translator.name}.vm...")
+    translator.translate()
+    translator.write_output()
+    print(f"VM translation complete. Output written to {translator.output_file}")
