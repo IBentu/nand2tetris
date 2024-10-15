@@ -1,5 +1,6 @@
 import sys, os
-from TranslationFunctions import push_instruction,\
+from TranslationFunctions import bootstrap,\
+                                 push_instruction,\
                                  pop_instruction,\
                                  arithmetic_logical_instruction,\
                                  label,\
@@ -8,8 +9,7 @@ from TranslationFunctions import push_instruction,\
                                  call_instruction,\
                                  function_instruction,\
                                  return_instruction,\
-                                 OPS_MAP,\
-                                 INFINITE_LOOP
+                                 OPS_MAP
 
 class Translator:
     def __init__(self, input_file: str):
@@ -20,10 +20,14 @@ class Translator:
         if path[1] != "vm":
             print("ERROR: file type should be .vm")
             exit(1)
+        elif not path[0][0].isupper():
+            print(f"ERROR: file should start with a capital letter: {path[0]}.vm")
+            exit(1)
         self.name = path[0]
         self.output_file = input_file.replace('.vm', '.asm')
         self.instructions = []
         self.asm_instructions = []
+        self.curr_function = ""
 
     def parse_file(self):
         """Reads the input file and strips out comments and whitespace."""
@@ -52,17 +56,19 @@ class Translator:
             try:
                 args = instruction.split(" ")
                 if args[0] == "label":
-                    self.asm_instructions.append(label(args[1]))
+                    self.asm_instructions.append(label(args[1], self.curr_function))
                 elif args[0] == "goto":
-                    self.asm_instructions.append(goto_instruction(args[1]))
+                    self.asm_instructions.append(goto_instruction(args[1], self.curr_function))
                 elif args[0] == "if-goto":
-                    self.asm_instructions.append(if_goto_instruction(args[1]))
+                    self.asm_instructions.append(if_goto_instruction(args[1], self.curr_function))
                 elif args[0] == "call":
-                    self.asm_instructions.append(call_instruction(args[1], args[2]))
+                    self.asm_instructions.append(call_instruction(args[1], int(args[2])))
                 elif args[0] == "function":
-                    self.asm_instructions.append(if_goto_instruction(args[1], args[2]))
+                    self.curr_function = args[1]
+                    self.asm_instructions.append(function_instruction(args[1], int(args[2])))
                 elif args[0] == "return":
                     self.asm_instructions.append(return_instruction())
+                    self.curr_function = ""
                 elif args[0] == "push":
                     self.asm_instructions.append(push_instruction(args[1], args[2], self.name))
                 elif args[0] == "pop":
@@ -72,17 +78,50 @@ class Translator:
             except Exception as e:
                 print(f"failed on line {i+1}: {e}")
                 exit(1)
-        self.asm_instructions.append(INFINITE_LOOP)
-    
+        """
+        self.asm_instructions.append("\n".join([
+                                                f"({self.name}.END)",
+                                                f"@{self.name}.END",
+                                                "0;JMP"
+                                                ]))
+        """
         
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: python3 VMTranslator.py <file.vm>")
         sys.exit(1)
-
-    input_file = sys.argv[1]
-    translator = Translator(input_file)
-    print(f"Starting VM translation of {translator.name}.vm...")
-    translator.translate()
-    translator.write_output()
-    print(f"VM translation complete. Output written to {translator.output_file}")
+    input_path = sys.argv[1]
+    if os.path.isdir(input_path):
+        if input_path.endswith("/") or input_path.endswith("\\"):
+            input_path = input_path[:-1]
+        name = os.path.basename(input_path)
+        translators = []
+        print(f"Starting VM translation of project {name}")
+        for filename in os.listdir(input_path):
+            if not filename.endswith(".vm"):
+                continue
+            print(f"Translating {filename}")
+            translator = Translator(os.path.join(input_path, filename))
+            translator.translate()
+            translators.append(translator)
+        if not len(translators):
+            print("no .vm files in directory")
+            exit(1)
+        writer = translators[0]
+        for t in translators[1:]:
+            writer.asm_instructions.extend(t.asm_instructions)
+        output = f"{input_path}/{name}.asm"
+        writer.output_file = f"{input_path}/{name}.asm"
+        writer.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
+        writer.write_output()
+        print(f"VM translation complete. Output written to {output}")
+    elif os.path.isfile(input_path):
+        translator = Translator(input_path)
+        print(f"Starting VM translation of {translator.name}.vm...")
+        translator.translate()
+        translator.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
+        translator.write_output()
+        print(f"VM translation complete. Output written to {translator.output_file}")
+    else:
+        print("ERROR: invalid path")
+        exit(1)

@@ -22,11 +22,6 @@ TAKE_FROM_STACK_TO_D = "\n".join([ # !!! I ASSUME THAT A=@SP !!!
     "A=M",
     "D=M",
 ])
-INFINITE_LOOP = "\n".join([
-    "(INFINITE)",
-    "   @INFINITE",
-    "   0;JMP"
-])
 def offset_pointer_in_D(segment: str, offset: str) -> str:
     """creates an instruction string that offsets the pointer stored in SEG_MAP[segment] and stores the resulting address in the D register"""
     return "\n".join([
@@ -37,7 +32,16 @@ def offset_pointer_in_D(segment: str, offset: str) -> str:
         "D=D+M"
     ])
 
-
+def bootstrap() -> str:
+    return "\n".join([
+        "/// BOOTSTRAP CODE ///",
+        "@256",
+        "D=A",
+        "@SP",
+        "M=D",
+        call_instruction("Sys.init"),
+        "/// END BOOSTRAP ///\n"
+    ])
 #### stack operations ####
 SEG_POINTERS = {
     "local": "@LCL",
@@ -49,20 +53,22 @@ SEG_POINTERS = {
  # push   
 def push_instruction(segment: str, offset: str, static_name: str) -> str:
     """Returns the Hack instructions for pushing the data at the offset in the relevant segment"""
+    instr = f"\n/// push {segment} {offset} ///\n"
     if segment == "constant":
-        return push_constant(offset)
+        return instr+push_constant(offset)
     if segment == "static":
-        return push_static(static_name, offset)
+        return instr+push_static(static_name, offset)
     if segment == "pointer":
         if offset == "0": # this=0
-            return push_pointer("this")
+            return instr+push_pointer("this")
         elif offset == "1": # that=1
-            return push_pointer("that")
+            return instr+push_pointer("that")
         else:
             raise Exception("invalid syntax")
     if segment == "temp":
-        return push_temp(offset)
+        return instr+push_temp(offset)
     return "\n".join([
+        instr[:-1], # I don't want to include the \n
         offset_pointer_in_D(segment, offset),
         "// D=RAM[D]",
         "A=D",
@@ -89,7 +95,7 @@ def push_static(name: str, index: str) -> str:
         INC_STACK
     ])
 def push_pointer(segment) -> str:
-    """Returns the Hack instructions for pushing the pointer of @segment"""
+    """Returns the Hack instructions for pushing the pointer of @segment to the stack"""
     return "\n".join([
         "// D=@segment",
         SEG_POINTERS[segment],
@@ -110,18 +116,20 @@ def push_temp(offset: str) -> str:
 # pop
 def pop_instruction(segment: str, offset: str, static_name: str) -> str:
     """Returns the Hack instructions for popping the data in the stack to the offset in the relevant segment"""
+    instr = f"\n/// pop {segment} {offset} ///\n"
     if segment == "static":
-        return pop_static(static_name, offset)
+        return instr+pop_static(static_name, offset)
     if segment == "pointer":
         if offset == "0": # this=0
-            return "\n".join(pop_pointer("this"))
+            return instr+pop_pointer("this")
         elif offset == "1": # that=1
-            return "\n".join(pop_pointer("that"))
+            return instr+pop_pointer("that")
         else:
             raise Exception("invalid syntax")
     if segment == "temp":
-        return "\n".join(pop_temp(offset))
+        return instr+pop_temp(offset)
     return "\n".join([
+        instr[:-1],
         offset_pointer_in_D(segment, offset),
         "// @address=D",
         "@address",
@@ -143,7 +151,7 @@ def pop_static(name: str, index: str) -> str:
         "M=D"
     ])
 def pop_pointer(segment: str) -> str:
-    """Returns the Hack instructions for popping the data in the stack to the pointer of @segment"""
+    """Returns the Hack instructions for popping the data in the stack to the pointer of @segment to the stack"""
     return "\n".join([
         DEC_STACK,
         TAKE_FROM_STACK_TO_D,
@@ -180,20 +188,20 @@ def comparison_op(jump_condition: str) -> str:
         f"D;{jump_condition}",
         f"(NO{str(jump_counter)})",
         "   D=0",
-        f"  @END{str(jump_counter)}",
+        f"  @END.{str(jump_counter)}",
         "   0;JMP",
         f"(YES{str(jump_counter)})",
         "   D=-1",
-        f"(END{str(jump_counter)})"
+        f"(END.{str(jump_counter)})"
     ]) 
 
 def arithmetic_logical_instruction(op: str) -> str:
     if op == "neg":
-        return "\n".join(neg_op())
+        return neg_op()
     if op == "not":
-        return "\n".join(not_op())
+        return not_op()
     return "\n".join([
-        f"// {op}",
+        f"\n/// {op} ///",
         DEC_STACK,
         TAKE_FROM_STACK_TO_D,
         "@temp",
@@ -208,7 +216,7 @@ def arithmetic_logical_instruction(op: str) -> str:
     ])
 def neg_op() -> str:
     return "\n".join([
-        "// neg",
+        "\n/// neg ///",
         DEC_STACK,
         "@SP",
         "A=M",
@@ -217,7 +225,7 @@ def neg_op() -> str:
     ])
 def not_op() -> str:
     return "\n".join([
-        "// not",
+        "\n/// not ///",
         DEC_STACK,
         "@SP",
         "A=M",
@@ -227,32 +235,36 @@ def not_op() -> str:
     
 #### branching ####
 
-def label(name: str) -> str:
-    return f"({name})"
-def goto_instruction(label: str) -> str:
-    return f"@{label}\n0;JMP"
-def if_goto_instruction(label: str) -> str:
+def label(name: str, funcname: str) -> str:
+    """returns a label instruction"""
+    return f"({funcname}${name})"
+def goto_instruction(label: str, funcname: str) -> str:
+    return f"@{funcname}${label}\n0;JMP"
+def if_goto_instruction(label: str, funcname: str) -> str:
+    if funcname: # in case the label is inside a function
+        funcname = funcname+"$"
     return "\n".join([
+        "/// if-goto ///",
         DEC_STACK, # popping stack
         TAKE_FROM_STACK_TO_D,
-        "@"+label,
+        f"@{funcname}${label}",
         "D;JNE"
     ])
     
-#### Functions ####
-
-def call_instruction(func: str, argsNum: str) -> str: #TODO
+#### functions ####
+def call_instruction(funcname: str, argsNum=0) -> str:
     global return_counter
     return_counter += 1
     """Returns instructions for calling function func with argsNum arguments. return address and segment pointers are pushed to stack while the ARG and LCL segments are updated"""
     return "\n".join([
+        f"\n/// call {funcname} {argsNum} ///",
         # push return address
-        push_constant(f"{return_counter}"), ## note: only the return counter is pushed, the full return address can be deduced
+        push_constant(f"{funcname}$ret.{return_counter}"),        
         # push segment pointers
-        push_constant("LCL"),
-        push_constant("ARG"),
-        push_constant("THIS"),
-        push_constant("THAT"),
+        push_pointer("local"),
+        push_pointer("argument"),
+        push_pointer("this"),
+        push_pointer("that"),
         # rebase ARG and LCL pointers
         "// rebase ARG = SP - 5 - #ofArgs",
         "@SP",
@@ -267,19 +279,80 @@ def call_instruction(func: str, argsNum: str) -> str: #TODO
         "@LCL",
         "M=D",
         # jump to callee and add return label
-        "@"+func,
+        "@"+funcname,
         "0;JMP",
-        f"(RET.{return_counter})",
+        f"({funcname}$ret.{return_counter})",
     ])
-def function_instruction(func: str, varsNum: str) -> str: #TODO
-    """Returns instructions for defining function func with varsNum local variables"""
+def function_instruction(funcname: str, varsNum: int) -> str:
+    """Returns instructions for defining function func with varsNum local variables in @LCL initialized to 0"""
+    instr = [f"({funcname})", "// init local vars"] # add function label
+    for _ in range(varsNum): # init local variables to 0
+        instr.append(push_constant("0"))
+    return "\n".join(instr)
+def return_instruction() -> str: 
+    """Returns instructions for returning from a function call, with the return value in the stack of the caller"""
     return "\n".join([
+        "\n/// return clause ///",
+        "// R13 = frame end address",
+        "@LCL",
+        "D=M",
+        "@R13", # frame end address
+        "M=D",
+        "// R14 = return ADDRESS = RAM[frame end address - 5]",
+        "@5",
+        "A=D-A",
+        "D=M",
+        "@R14",
+        "M=D",
+        "// RAM[@ARG] = return VALUE",
+        DEC_STACK,
+        TAKE_FROM_STACK_TO_D, # ret value is on top of the stack by convention
+        "@ARG",
+        "A=M",
+        "M=D",
+        "// SP=ARG+1",
+        "@ARG",
+        "D=M+1",
+        "@SP",
+        "M=D",
         
-    ])
-def return_instruction() -> str: #TODO
-    """Returns instructions for defining function func with varsNum local variables"""
-    return "\n".join([
+        "// pop stack segments pointers",
+        value_of_offsetted_R13_address(1),
+        "@THAT",
+        "M=D",
         
+        value_of_offsetted_R13_address(2),
+        "@THIS",
+        "M=D",
+        
+        value_of_offsetted_R13_address(3),
+        "@ARG",
+        "M=D",
+        
+        value_of_offsetted_R13_address(4),
+        "@LCL",
+        "M=D",
+        
+        "// jump to caller function",
+        "@R14",
+        "A=M",
+        "0;JMP"
     ])
-
-####  ####
+def value_of_offsetted_R13_address(offset: int) -> str:
+    """Returns instructions for offsetting the address in @R13 by -offset. putting the value of RAM[@R13-offset] in D"""
+    if offset < 1: raise Exception("invalid offset")
+    if offset == 1: # optimization
+        ls = [
+            "@R13",
+            "A=M-1",
+            "D=M"
+        ]
+    else:
+        ls = [
+            "@R13",
+            "D=M",
+            "@"+str(offset),
+            "A=D-A",
+            "D=M"
+        ]
+    return "\n".join(ls)
