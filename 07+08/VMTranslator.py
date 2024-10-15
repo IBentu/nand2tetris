@@ -9,25 +9,27 @@ from TranslationFunctions import bootstrap,\
                                  call_instruction,\
                                  function_instruction,\
                                  return_instruction,\
-                                 OPS_MAP
+                                 ALL_ARITHMETIC_LOGICAL_OPS
 
 class Translator:
     def __init__(self, input_file: str):
         self.input_file = input_file
         if input_file.endswith("/") or input_file.endswith("\\"):
             input_file = input_file[:-1]
-        path = os.path.basename(input_file).rsplit('.', 1) # remove ".asm" from filename
+        path = os.path.basename(input_file).rsplit('.', 1)
         if path[1] != "vm":
             print("ERROR: file type should be .vm")
-            exit(1)
+            sys.exit(1)
         elif not path[0][0].isupper():
             print(f"ERROR: file should start with a capital letter: {path[0]}.vm")
-            exit(1)
+            sys.exit(1)
         self.name = path[0]
         self.output_file = input_file.replace('.vm', '.asm')
         self.instructions = []
         self.asm_instructions = []
         self.curr_function = ""
+        self.num_of_returns = 0
+        self.num_of_jumps = 0
 
     def parse_file(self):
         """Reads the input file and strips out comments and whitespace."""
@@ -62,23 +64,26 @@ class Translator:
                 elif args[0] == "if-goto":
                     self.asm_instructions.append(if_goto_instruction(args[1], self.curr_function))
                 elif args[0] == "call":
-                    self.asm_instructions.append(call_instruction(args[1], int(args[2])))
+                    self.asm_instructions.append(call_instruction(caller=self.curr_function, callee=args[1], argsNum=int(args[2]), return_tag=self.num_of_returns))
+                    self.num_of_returns += 1
                 elif args[0] == "function":
                     self.curr_function = args[1]
                     self.asm_instructions.append(function_instruction(args[1], int(args[2])))
                 elif args[0] == "return":
                     self.asm_instructions.append(return_instruction())
-                    self.curr_function = ""
                 elif args[0] == "push":
                     self.asm_instructions.append(push_instruction(args[1], args[2], self.name))
                 elif args[0] == "pop":
                     self.asm_instructions.append(pop_instruction(args[1], args[2], self.name))
-                elif args[0] in set(OPS_MAP.keys()).union(set(["neg", "not"])): # arithmetic/logical operation instruction
-                    self.asm_instructions.append(arithmetic_logical_instruction(args[0]))
+                elif args[0] in ALL_ARITHMETIC_LOGICAL_OPS: # arithmetic/logical operation instruction
+                    self.asm_instructions.append(arithmetic_logical_instruction(args[0], self.num_of_jumps))
+                    if args[0] in ["lt", "eq", "gt"]: # in case we do a comparison op
+                        self.num_of_jumps += 1
             except Exception as e:
                 print(f"failed on line {i+1}: {e}")
-                exit(1)
+                sys.exit(1)
         """
+        # inifinite loop should be implemented in Sys.init
         self.asm_instructions.append("\n".join([
                                                 f"({self.name}.END)",
                                                 f"@{self.name}.END",
@@ -106,7 +111,7 @@ if __name__ == '__main__':
             translators.append(translator)
         if not len(translators):
             print("no .vm files in directory")
-            exit(1)
+            sys.exit(1)
         writer = translators[0]
         for t in translators[1:]:
             writer.asm_instructions.extend(t.asm_instructions)
@@ -124,4 +129,4 @@ if __name__ == '__main__':
         print(f"VM translation complete. Output written to {translator.output_file}")
     else:
         print("ERROR: invalid path")
-        exit(1)
+        sys.exit(1)

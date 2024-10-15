@@ -1,5 +1,3 @@
-jump_counter = -1
-return_counter = -1
 # useful instructions
 INC_STACK = "\n".join([
     "// SP++",
@@ -39,9 +37,11 @@ def bootstrap() -> str:
         "D=A",
         "@SP",
         "M=D",
-        call_instruction("Sys.init"),
+        call_instruction("", "Sys.init", 0, "bootstrap"),
         "/// END BOOSTRAP ///\n"
     ])
+
+
 #### stack operations ####
 SEG_POINTERS = {
     "local": "@LCL",
@@ -67,15 +67,7 @@ def push_instruction(segment: str, offset: str, static_name: str) -> str:
             raise Exception("invalid syntax")
     if segment == "temp":
         return instr+push_temp(offset)
-    return "\n".join([
-        instr[:-1], # I don't want to include the \n
-        offset_pointer_in_D(segment, offset),
-        "// D=RAM[D]",
-        "A=D",
-        "D=M",
-        INSERT_D_TO_STACK,
-        INC_STACK
-    ])
+    return instr+push_segment(segment, offset)
 def push_constant(const: str) -> str:
         """Returns the Hack instructions for pushing the constant"""
         return "\n".join([
@@ -112,6 +104,16 @@ def push_temp(offset: str) -> str:
         INSERT_D_TO_STACK,
         INC_STACK
     ])
+def push_segment(segment: str, offset: str) -> str:
+    """Returns the Hack instructions for pushing the data from the provided segment"""
+    return "\n".join([
+        offset_pointer_in_D(segment, offset),
+        "// D=RAM[D]",
+        "A=D",
+        "D=M",
+        INSERT_D_TO_STACK,
+        INC_STACK
+    ])
 
 # pop
 def pop_instruction(segment: str, offset: str, static_name: str) -> str:
@@ -128,19 +130,7 @@ def pop_instruction(segment: str, offset: str, static_name: str) -> str:
             raise Exception("invalid syntax")
     if segment == "temp":
         return instr+pop_temp(offset)
-    return "\n".join([
-        instr[:-1],
-        offset_pointer_in_D(segment, offset),
-        "// @address=D",
-        "@address",
-        "M=D",
-        DEC_STACK, # => A=@SP
-        TAKE_FROM_STACK_TO_D,
-        "// RAM[address]=D",
-        "@address",
-        "A=M",
-        "M=D"   
-    ])
+    return instr+pop_other(segment, offset)
 def pop_static(name: str, index: str) -> str:
     """Returns the Hack instructions for popping the data in the stack to var @name.index"""
     return "\n".join([
@@ -167,82 +157,87 @@ def pop_temp(offset: str) -> str:
         "@"+str(int(offset)+5),
         "M=D"
     ])
+def pop_other(segment: str, offset: str) -> str:
+    """Returns the Hack instructions for popping the data to the provided segment"""
+    return "\n".join([
+        offset_pointer_in_D(segment, offset),
+        "// @address=D",
+        "@address",
+        "M=D",
+        DEC_STACK, # => A=@SP
+        TAKE_FROM_STACK_TO_D,
+        "// RAM[address]=D",
+        "@address",
+        "A=M",
+        "M=D"   
+    ])
 
 
 #### arithmetic and logical operations ####
-OPS_MAP = { # maps from op string to function for formatting comp part of the instruction string
-    "add": lambda: "D=D+M",
-    "sub": lambda: "D=D-M",
-    "eq": lambda: "D=D-M\n"+comparison_op("JEQ"),
-    "gt": lambda: "D=D-M\n"+comparison_op("JGT"),
-    "lt": lambda: "D=D-M\n"+comparison_op("JLT"),
-    "and": lambda: f"D=D&M",
-    "or": lambda: f"D=D|M",
+ALL_ARITHMETIC_LOGICAL_OPS = ["add", "sub", "and", "or", "eq", "gt", "lt", "neg", "not"]
+UNARY_OPS_MAP = {
+    "neg": "M=-M",
+    "not": "M=!M"
 }
-def comparison_op(jump_condition: str) -> str:
+BINARY_OPS_MAP = {
+    "add": lambda _: "D=D+M",
+    "sub": lambda _: "D=D-M",
+    "and": lambda _: "D=D&M",
+    "or": lambda _: "D=D|M",
+    "eq": lambda num: comparison_op("JEQ", num),
+    "gt": lambda num: comparison_op("JGT", num),
+    "lt": lambda num: comparison_op("JLT", num),
+}
+def comparison_op(jump_condition: str, jump_num: str) -> str:
     """Returns the instruction strings (concat-ed) of the comparison, with the result stored in the D register."""
-    global jump_counter
-    jump_counter += 1
     return "\n".join([
-        f"@YES{str(jump_counter)}",
+        "D=D-M",
+        f"@YES.{str(jump_num)}",
         f"D;{jump_condition}",
-        f"(NO{str(jump_counter)})",
+        f"(NO.{str(jump_num)})",
         "   D=0",
-        f"  @END.{str(jump_counter)}",
+        f"  @END.{str(jump_num)}",
         "   0;JMP",
-        f"(YES{str(jump_counter)})",
+        f"(YES.{str(jump_num)})",
         "   D=-1",
-        f"(END.{str(jump_counter)})"
-    ]) 
-
-def arithmetic_logical_instruction(op: str) -> str:
-    if op == "neg":
-        return neg_op()
-    if op == "not":
-        return not_op()
-    return "\n".join([
-        f"\n/// {op} ///",
-        DEC_STACK,
-        TAKE_FROM_STACK_TO_D,
-        "@temp",
-        "M=D",
-        DEC_STACK,
-        TAKE_FROM_STACK_TO_D,
-        "@temp",
-        # D has the first pushed number, M has the second pushed number
-        OPS_MAP[op](), # => D=D<op>M
-        INSERT_D_TO_STACK,
-        INC_STACK
+        f"(END.{str(jump_num)})"
     ])
-def neg_op() -> str:
-    return "\n".join([
+def arithmetic_logical_instruction(op: str, jump_num: int) -> str:
+    """Returns the operation's instructions string"""
+    if op in UNARY_OPS_MAP.keys():
+        return "\n".join([
         "\n/// neg ///",
         DEC_STACK,
         "@SP",
         "A=M",
-        "M=-M",
+        UNARY_OPS_MAP[op],
         INC_STACK
     ])
-def not_op() -> str:
-    return "\n".join([
-        "\n/// not ///",
+    if op in BINARY_OPS_MAP.keys():
+        return "\n".join([
+        f"\n/// {op} ///",
         DEC_STACK,
-        "@SP",
-        "A=M",
-        "M=!M",
+        TAKE_FROM_STACK_TO_D,
+        "@R15",
+        "M=D",
+        DEC_STACK,
+        TAKE_FROM_STACK_TO_D,
+        "@R15",
+        # D has the first pushed number, M has the second pushed number
+        BINARY_OPS_MAP[op](jump_num), # => D=D<op>M
+        INSERT_D_TO_STACK,
         INC_STACK
     ])
+    raise Exception("invalid op")
     
-#### branching ####
 
+#### branching ####
 def label(name: str, funcname: str) -> str:
     """returns a label instruction"""
     return f"({funcname}${name})"
 def goto_instruction(label: str, funcname: str) -> str:
     return f"@{funcname}${label}\n0;JMP"
 def if_goto_instruction(label: str, funcname: str) -> str:
-    if funcname: # in case the label is inside a function
-        funcname = funcname+"$"
     return "\n".join([
         "/// if-goto ///",
         DEC_STACK, # popping stack
@@ -250,16 +245,15 @@ def if_goto_instruction(label: str, funcname: str) -> str:
         f"@{funcname}${label}",
         "D;JNE"
     ])
-    
+
+
 #### functions ####
-def call_instruction(funcname: str, argsNum=0) -> str:
-    global return_counter
-    return_counter += 1
+def call_instruction(caller: str, callee: str, argsNum: int, return_tag: int|str) -> str:
     """Returns instructions for calling function func with argsNum arguments. return address and segment pointers are pushed to stack while the ARG and LCL segments are updated"""
     return "\n".join([
-        f"\n/// call {funcname} {argsNum} ///",
+        f"\n/// call {callee} {argsNum} ///",
         # push return address
-        push_constant(f"{funcname}$ret.{return_counter}"),        
+        push_constant(f"{caller}$ret.{return_tag}"),        
         # push segment pointers
         push_pointer("local"),
         push_pointer("argument"),
@@ -279,9 +273,9 @@ def call_instruction(funcname: str, argsNum=0) -> str:
         "@LCL",
         "M=D",
         # jump to callee and add return label
-        "@"+funcname,
+        "@"+callee,
         "0;JMP",
-        f"({funcname}$ret.{return_counter})",
+        f"({caller}$ret.{return_tag})",
     ])
 def function_instruction(funcname: str, varsNum: int) -> str:
     """Returns instructions for defining function func with varsNum local variables in @LCL initialized to 0"""
