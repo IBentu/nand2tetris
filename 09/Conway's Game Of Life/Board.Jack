@@ -1,0 +1,56 @@
+class Board {
+    field Array cells;
+    
+    // screen is 512px X 256px so each cell will be 16px and the board will have 32cells X 16cells
+    static int rows = 16;
+    static int cols = 32;
+
+
+    /** inits the board 2D array */
+    constructor Board new() {
+        let cells = Array.new(rows);
+        int i, j;
+        let i = 0;
+        while (i < rows) {
+            cells[i] = Array.new(cols);
+            let j = 0;
+            while (j < cols) {
+                let cells[i][j] = false;
+                let j = j + 1;
+            }
+            let i = i + 1;
+        }
+        return this;
+    }
+
+    /** draws the current board state on the screen*/ 
+    method void draw() {
+        var int i = 0;
+        while (i < rows) {
+            var int j = 0;
+            while (j < cols) {
+                Board.drawCell(i, j, cells[i][j]);
+                j++;
+            }
+            i++;
+        }
+        return;
+    }
+
+    /** calculates the next step of the game and updates the cells */
+    method void step() {
+        // TODO
+        return;
+    }
+
+
+    /** draws cell i, j in the provided color */
+    function void drawCell(int i, int j, boolean color) {
+        Screen.setColor(color);
+        Screen.drawRectangle(j, i, j+15, i+15);
+        return;
+    }
+
+
+    
+}
