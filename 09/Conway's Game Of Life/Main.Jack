@@ -29,6 +29,7 @@ class Main {
             do board.draw();
             do Sys.wait(1000/gameSpeed);
         }
+        do game.dispose();
         return;
     }
 

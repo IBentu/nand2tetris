@@ -36,4 +36,7 @@ class Game {
         let board = next_board;
         return;
     
+    method void dispose() {
+        do board.dispose();
+    }
 }
