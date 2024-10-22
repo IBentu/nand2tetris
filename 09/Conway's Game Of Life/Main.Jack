@@ -1,30 +1,33 @@
 class Main {
     function void main() {
-        int enterKey, spaceKey, wKey, aKey, sKey, dkey;
+        var int enterKey, spaceKey, wKey, aKey, sKey, dkey;
         let enterKey = 128;
         let spaceKey = 32;
         let wKey = 119;
         let aKey = 97;
         let sKey = 115;
         let dkey = 100;
-        Main.drawControlsScreen()
+        do Main.drawControlsScreen()
         while (Keyboard.readChar() != enterKey) {
             Sys.wait(1); // show controls until enter is pressed
         }
-        Screen.clearScreen();
-        Board board = Board.new();
+        do Screen.clearScreen();
+        var Game game;
+        let game = Game.new();
+        var int i, j; // current selected cell
+        let i = 0;
+        let j = 0;
         while (Keyboard.readChar() != enterKey) {
             // TODO:
             // setup loop
-            // need to update 
             // add cursor/border for current selected cell?
         }
-        int gameSpeed;
+        var int gameSpeed;
         let gameSpeed = 5;
         while (Keyboard.keyPressed() != enterKey) {
-            board.step();
-            board.draw();
-            Sys.wait(1000/gameSpeed);
+            do board.step();
+            do board.draw();
+            do Sys.wait(1000/gameSpeed);
         }
         return;
     }

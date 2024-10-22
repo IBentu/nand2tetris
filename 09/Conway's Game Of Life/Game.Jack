@@ -1,0 +1,39 @@
+class Game {
+    field Board board;
+    
+    // screen is 512px X 256px so each cell will be 16px and the board will have 32cells X 16cells
+    static int rows = 16;
+    static int cols = 32;
+
+
+    /** inits the Game state */
+    constructor Game new() {
+        let board = Board.new(Game.rows, Game.cols);
+        return this;
+    }
+
+    /** draws the current board state on the screen*/ 
+    method void draw() {
+        do board.draw();
+    }
+
+    /** calculates the next step of the game and updates the cells */
+    method void step() {
+        var int i = 0;
+        var Board next_board;
+        let next_board = Board.new(Game.rows, Game.cols);
+        while (i < Game.rows) {
+            var int j = 0;
+            while (j < Game.cols) {
+                var int neighbors;
+                let neighbors = board.neighbors(i, j);
+                next_board.setCell((neighbors == 2)|(neighbors == 3)); // selection for cells
+                let j = j+1;
+            }
+            let i = i+1;
+        }
+        do board.dispose();
+        let board = next_board;
+        return;
+    
+}

@@ -1,20 +1,18 @@
 class Board {
     field Array cells;
-    
-    // screen is 512px X 256px so each cell will be 16px and the board will have 32cells X 16cells
-    static int rows = 16;
-    static int cols = 32;
-
+    field int sizeX, sizeY;
 
     /** inits the board 2D array */
-    constructor Board new() {
+    constructor Board new(int rows, int cols) {
+        let sizeY = rows;
+        let sizeX = cols;
         let cells = Array.new(rows);
-        int i, j;
+        var int i, j;
         let i = 0;
-        while (i < rows) {
+        while (i < Board.rows) {
             cells[i] = Array.new(cols);
             let j = 0;
-            while (j < cols) {
+            while (j < Board.cols) {
                 let cells[i][j] = false;
                 let j = j + 1;
             }
@@ -26,31 +24,66 @@ class Board {
     /** draws the current board state on the screen*/ 
     method void draw() {
         var int i = 0;
-        while (i < rows) {
+        while (i < Board.rows) {
             var int j = 0;
-            while (j < cols) {
-                Board.drawCell(i, j, cells[i][j]);
-                j++;
+            while (j < Board.cols) {
+                do Board.drawCell(i, j, cells[i][j]);
+                let j = j+1;
             }
-            i++;
+            let i = i+1;
         }
         return;
     }
 
+    method void setCell(int i, int j, boolean alive) {
+        let cell[i][j] = alive;
+    }
+
     /** calculates the next step of the game and updates the cells */
     method void step() {
-        // TODO
+        var int i = 0;
+        while (i < Board.rows) {
+            var int j = 0;
+            while (j < Board.cols) {
+                
+                let j = j+1;
+            }
+            let i = i+1;
+        }
         return;
     }
 
+    method int neighbors(int i, int j) {
+        var int sum;
+        let sum = 0;
+        if (this.inbounds(i+1, j)){if (cells[i][j]) {let sum = sum + 1;}}
+        if (this.inbounds(i+1, j-1)){if (cells[i][j]) {let sum = sum + 1;}}
+        if (this.inbounds(i+1, j+1)){if (cells[i][j]) {let sum = sum + 1;}}
+        if (this.inbounds(i-1, j)){if (cells[i][j]) {let sum = sum + 1;}}
+        if (this.inbounds(i-1, j-1)){if (cells[i][j]) {let sum = sum + 1;}}
+        if (this.inbounds(i-1, j+1)){if (cells[i][j]) {let sum = sum + 1;}}
+        if (this.inbounds(i, j+1)){if (cells[i][j]) {let sum = sum + 1;}}
+        if (this.inbounds(i, j-1)){if (cells[i][j]) {let sum = sum + 1;}}
+        return sum;
+    }
+
+    method boolean inbounds(int i, int j) {
+        return (i >= 0)&(i < sizeY)&(j >= 0)&(j < sizeX);
+    }
 
     /** draws cell i, j in the provided color */
     function void drawCell(int i, int j, boolean color) {
-        Screen.setColor(color);
-        Screen.drawRectangle(j, i, j+15, i+15);
+        do Screen.setColor(color);
+        do Screen.drawRectangle(j, i, j+15, i+15);
         return;
     }
 
-
-    
+    function void dispose() {
+        var int i;
+        let i = 0;
+        while i < sizeY {
+            do cells[i].dispose();
+        }
+        do cells.dispose();
+    }
 }
