@@ -1,35 +1,57 @@
-class Main {
+    class Main {
     function void main() {
-        var int enterKey, spaceKey, wKey, aKey, sKey, dkey;
+        // declarations
+        var int enterKey, spaceKey, wKey, aKey, sKey, dkey, esckey;
+        var Game game;
+        var int i, j; // current selected cell
+        var int key;
+        var int gameSpeed;
+
+
         let enterKey = 128;
         let spaceKey = 32;
         let wKey = 119;
         let aKey = 97;
         let sKey = 115;
         let dkey = 100;
-        do Main.drawControlsScreen()
-        while (Keyboard.readChar() != enterKey) {
-            Sys.wait(1); // show controls until enter is pressed
+        let esckey = 140;
+        do Main.drawControlsScreen();
+        while (Main.neqINT(Keyboard.readChar(), enterKey)) {
+            do Sys.wait(1); // show controls until enter is pressed
         }
         do Screen.clearScreen();
-        var Game game;
+        do Game.setSize(16, 32);
         let game = Game.new();
-        var int i, j; // current selected cell
         let i = 0;
         let j = 0;
-        while (Keyboard.readChar() != enterKey) {
+        while (Main.neqINT(Keyboard.keyPressed(), enterKey)) {
+            let key = Keyboard.readChar();
+            if ((key == wKey) & (-1 < i - 1)) { // up
+                let i = i - 1;
+            } else if ((key == aKey) & (-1 < j - 1)) { // left
+                let j = j - 1;
+            } else if ((key == sKey) & (i + 1 < Game.rows)) { // down
+                let i = i + 1;
+            } else if ((key == dkey) & (j + 1 < Game.cols)) { // right
+                let j = j + 1;
+            } else if (key == spaceKey) { // change cell
+                do game.flipCell(i, j);
+                do game.updateCell(i, j);
+            } else if (key == esckey) { // exit
+                do Sys.halt();
+            }
+            
             // TODO:
-            // setup loop
-            // add cursor/border for current selected cell?
+            //  maybe add cursor/border for current selected cell?
         }
-        var int gameSpeed;
         let gameSpeed = 5;
-        while (Keyboard.keyPressed() != enterKey) {
+        while (Main.neqINT(Keyboard.keyPressed(), enterKey)| Main.neqINT(Keyboard.keyPressed(), escKey)) {
             do board.step();
             do board.draw();
             do Sys.wait(1000/gameSpeed);
         }
-        do game.dispose();
+        do game.dispose();         
+        do Sys.halt();
         return;
     }
 
@@ -112,5 +134,9 @@ class Main {
         do Memory.poke(memAddress +196, 126);
         do Memory.poke(memAddress +228, 30);
         return;
+    }
+
+    function boolean neqINT(int a, int b) {
+        return (a > b)| (b > a);
     }
 }

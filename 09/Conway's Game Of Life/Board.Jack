@@ -4,10 +4,10 @@ class Board {
 
     /** inits the board 2D array */
     constructor Board new(int rows, int cols) {
+        var int i, j;
         let sizeY = rows;
         let sizeX = cols;
         let cells = Array.new(rows);
-        var int i, j;
         let i = 0;
         while (i < Board.rows) {
             cells[i] = Array.new(cols);
@@ -23,9 +23,10 @@ class Board {
 
     /** draws the current board state on the screen*/ 
     method void draw() {
-        var int i = 0;
+        var int i, j;
+        let i = 0;
         while (i < Board.rows) {
-            var int j = 0;
+            let j = 0;
             while (j < Board.cols) {
                 do Board.drawCell(i, j, cells[i][j]);
                 let j = j+1;
@@ -36,16 +37,23 @@ class Board {
     }
 
     method void setCell(int i, int j, boolean alive) {
-        let cell[i][j] = alive;
+        let cells[i][j] = alive;
+        return;
+    }
+
+    method void flipCell(int i, int j) {
+        let cells[i][j] = !cells[i][j];
+        return;
     }
 
     /** calculates the next step of the game and updates the cells */
     method void step() {
-        var int i = 0;
+        var int i, j;
+        let i = 0;
         while (i < Board.rows) {
-            var int j = 0;
+            let j = 0;
             while (j < Board.cols) {
-                
+                // TODO
                 let j = j+1;
             }
             let i = i+1;
@@ -71,6 +79,11 @@ class Board {
         return (i >= 0)&(i < sizeY)&(j >= 0)&(j < sizeX);
     }
 
+    method void updateCell(int i, int j) {
+        do Board.drawCell(i, j, cells[i][j]);
+        return;
+    }
+
     /** draws cell i, j in the provided color */
     function void drawCell(int i, int j, boolean color) {
         do Screen.setColor(color);
@@ -85,5 +98,6 @@ class Board {
             do cells[i].dispose();
         }
         do cells.dispose();
+        return';
     }
 }
