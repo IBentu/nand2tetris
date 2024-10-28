@@ -1,5 +1,5 @@
 class Game { // TODO: combine with Board.Jack
-    field Board board;
+    field Array board;
     
     // screen is 512px X 256px so each cell will be 16px and the board will have 32cells X 16cells
     static int rows;
@@ -8,27 +8,64 @@ class Game { // TODO: combine with Board.Jack
 
     /** inits the Game state */
     constructor Game new() {
-        let board = Board.new(Game.rows, Game.cols);
+        let board = Game.initBoard();
         return this;
+    }
+
+    function Array initBoard() {
+        var int i, j, rows, cols;
+        var Array board, temp;
+        let rows = Game.getRows();
+        let cols = Game.getCols();
+        let board = Array.new(rows);
+        let i = 0;
+        while (i < rows) {
+            let board[i] = Array.new(cols);
+            let temp = board[i];
+            let j = 0;
+            while (j < cols) {
+                let temp[j] = false;
+                let j = j+1;
+            }
+            let i = i + 1;
+        }
+        return board;
     }
 
     /** draws the current board state on the screen*/ 
     method void draw() {
-        do board.draw();
+        var int i, j, rows, cols;
+        var Array temp;
+        let rows = Game.getRows();
+        let cols = Game.getCols();
+        let i = 0;
+        while (i < rows) {
+            let j = 0;
+            let temp = board[i];
+            while (j < cols) {
+                do Game.drawCell(i, j, temp[j]);
+                let j = j+1;
+            }
+            let i = i+1;
+        }
         return;
     }
 
-    /** calculates the next step of the game and updates the cells */
+    /** calculates the next step of the game and updates the board */
     method void step() {
-        var int i = 0;
-        var Board next_board;
+        var int i, j, rows, cols;
+        var Array next_board, temp;
         var int neighbors;
-        let next_board = Board.new(Game.rows, Game.cols);
-        while (i < Game.rows) {
-            var int j = 0;
-            while (j < Game.cols) {
-                let neighbors = board.neighbors(i, j);
-                next_board.setCell((neighbors == 2)|(neighbors == 3)); // selection for cells
+        let rows = Game.getRows();
+        let cols = Game.getCols();
+        let i = 0;
+        let next_board = Game.initBoard();
+        while (i < rows) {
+            let j = 0;
+            let temp = next_board[i];
+            while (j < cols) {
+                let neighbors = Game.neighbors(board, i, j);
+                let temp[j] = Main.eq(neighbors, 2) | Main.eq(neighbors, 3); // selection for cells
                 let j = j+1;
             }
             let i = i+1;
@@ -36,24 +73,100 @@ class Game { // TODO: combine with Board.Jack
         do board.dispose();
         let board = next_board;
         return;
+    }
     
     method void flipCell(int i, int j) {
-        do board.flipCell(i, j);
+        var Array temp;
+        let temp = board[i];
+        let temp[j] = ~temp[j];
         return;
     }
     method void updateCell(int i, int j) {
-        do board.updateCell(i, j);
+        var Array temp;
+        let temp = board[i];
+        do Game.drawCell(i, j, temp[j]);
         return;
     }
 
     method void dispose() {
+        var int i;
+        var Array temp;
+        let i = 0;
+        while (i < Game.getRows()) {
+            let temp = board[i];
+            do temp.dispose();
+            let i = i+1;
+        }
         do board.dispose();
         return;
     }
 
-    function void setSize(int X, int Y) {
-        Game.rows = Y;
-        Game.cols = X;
+    /** returns the number of alive neighbors of cell (i,j) */
+    function int neighbors(Array board, int i, int j) {
+        var int sum;
+        var Array temp;
+        let sum = 0;
+        if (Game.inbounds(i+1, j))  {
+            let temp = board[i+1];
+            if (temp[j]) {let sum = sum + 1;}
+        }
+        if (Game.inbounds(i+1, j-1)) {
+            let temp = board[i+1];
+            if (temp[j-1]) {let sum = sum + 1;}
+        }
+        if (Game.inbounds(i+1, j+1)) {
+            let temp = board[i+1];
+            if (temp[j+1]) {let sum = sum + 1;}
+        }
+        if (Game.inbounds(i-1, j)) {
+            let temp = board[i-1];
+            if (temp[j]) {let sum = sum + 1;}
+        }
+        if (Game.inbounds(i-1, j-1)) {
+            let temp = board[i-1];
+            if (temp[j-1]) {let sum = sum + 1;}
+        }
+        if (Game.inbounds(i-1, j+1)) {
+            let temp = board[i-1];
+            if (temp[j+1]) {let sum = sum + 1;}
+        }
+        if (Game.inbounds(i, j+1)) {
+            let temp = board[i];
+            if (temp[j+1]) {let sum = sum + 1;}
+        }
+        if (Game.inbounds(i, j-1)) {
+            let temp = board[i];
+            if (temp[j-1]) {let sum = sum + 1;}
+        }
+        return sum;
+    }
+
+    /** returns true if (i,j) is in the bounds of the board */
+    function boolean inbounds(int i, int j) {
+        return ((-1 < i)&(i < Game.getRows())&(-1 < j)&(j < Game.getCols()));
+    }
+
+    /** draws cell i, j in the provided color */
+    function void drawCell(int i, int j, boolean color) {
+        var int real_i, real_j;
+        let real_i = 16*i;
+        let real_j = 16*j;
+        do Screen.setColor(color);
+        do Screen.drawRectangle(real_j, real_i, real_j+15, real_i+15);
         return;
+    }
+
+    function void setSize(int Y, int X) {
+        let rows = Y;
+        let cols = X;
+        return;
+    }
+
+    function int getRows() {
+        return rows;
+    }
+    
+    function int getCols() {
+        return cols;
     }
 }

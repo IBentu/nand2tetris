@@ -1,58 +1,95 @@
-    class Main {
+class Main {
     function void main() {
         // declarations
-        var int enterKey, spaceKey, wKey, aKey, sKey, dkey, esckey;
+        var int enterKey, spaceKey, wKey, WKey, aKey, AKey, sKey, SKey, dKey, DKey, escKey;
         var Game game;
         var int i, j; // current selected cell
-        var int key;
+        var int key, lastKey;
         var int gameSpeed;
+        var int rows, cols;
+        var boolean UP, DOWN, LEFT, RIGHT, inbounds;
 
-
+        // consts
         let enterKey = 128;
         let spaceKey = 32;
         let wKey = 119;
+        let WKey = 87;
         let aKey = 97;
+        let AKey = 65;
         let sKey = 115;
-        let dkey = 100;
-        let esckey = 140;
+        let SKey = 83;
+        let dKey = 100;
+        let DKey = 68;
+        let escKey = 140;
+        
         do Main.drawControlsScreen();
-        while (Main.neqINT(Keyboard.readChar(), enterKey)) {
-            do Sys.wait(1); // show controls until enter is pressed
+        while (Main.neq(Keyboard.keyPressed(), enterKey)) {
+            do Sys.wait(20); // show controls until enter is pressed
         }
         do Screen.clearScreen();
         do Game.setSize(16, 32);
+        let rows = Game.getRows();
+        let cols = Game.getCols();
         let game = Game.new();
         let i = 0;
         let j = 0;
-        while (Main.neqINT(Keyboard.keyPressed(), enterKey)) {
-            let key = Keyboard.readChar();
-            if ((key == wKey) & (-1 < i - 1)) { // up
+        let key = Keyboard.keyPressed();
+        while (Main.neq(key, enterKey)) {
+            let inbounds = -1 < i-1;
+            let UP = inbounds & (Main.eq(key, wKey) | Main.eq(key, WKey));
+
+            let inbounds = -1 < j-1;
+            let LEFT = inbounds & (Main.eq(key, aKey) | Main.eq(key, AKey));
+
+            let inbounds = i+1 < rows;
+            let DOWN = inbounds & (Main.eq(key, sKey) | Main.eq(key, SKey));
+
+            let inbounds = j+1 < cols;
+            let RIGHT = inbounds & (Main.eq(key, dKey) | Main.eq(key, DKey));
+
+            if (UP) {
                 let i = i - 1;
-            } else if ((key == aKey) & (-1 < j - 1)) { // left
+            } else { if (LEFT) {
                 let j = j - 1;
-            } else if ((key == sKey) & (i + 1 < Game.rows)) { // down
+            } else { if (DOWN) {
                 let i = i + 1;
-            } else if ((key == dkey) & (j + 1 < Game.cols)) { // right
+            } else { if (RIGHT) {
                 let j = j + 1;
-            } else if (key == spaceKey) { // change cell
+            } else { if (Main.eq(key, spaceKey)) { // change cell
                 do game.flipCell(i, j);
                 do game.updateCell(i, j);
-            } else if (key == esckey) { // exit
+            } else { if (Main.eq(key, escKey)) { // exit
                 do Sys.halt();
+            }}}}}}
+            
+            let lastKey = key;
+            let key = Keyboard.keyPressed();
+            if (Main.eq(key, lastKey)) {
+                do Sys.wait(200000); // TODO: fix
             }
+            let key = Keyboard.keyPressed();
             
             // TODO:
             //  maybe add cursor/border for current selected cell?
         }
         let gameSpeed = 5;
-        while (Main.neqINT(Keyboard.keyPressed(), enterKey)| Main.neqINT(Keyboard.keyPressed(), escKey)) {
-            do board.step();
-            do board.draw();
-            do Sys.wait(1000/gameSpeed);
+        while (Main.neq(Keyboard.keyPressed(), enterKey)| Main.neq(Keyboard.keyPressed(), escKey)) {
+            do game.step();
+            do game.draw();
+            do Sys.wait(10000/gameSpeed);
         }
         do game.dispose();         
         do Sys.halt();
         return;
+    }
+
+    function boolean neq(int a, int b) {
+        return (a > b) | (b > a);
+    }
+
+
+    function boolean eq(int a, int b) {
+        return ~(a > b) & ~(b > a);
     }
 
     function void drawControlsScreen() {
@@ -134,9 +171,5 @@
         do Memory.poke(memAddress +196, 126);
         do Memory.poke(memAddress +228, 30);
         return;
-    }
-
-    function boolean neqINT(int a, int b) {
-        return (a > b)| (b > a);
     }
 }
