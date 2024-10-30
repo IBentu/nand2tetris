@@ -14,6 +14,15 @@ def paths(input) -> tuple[str, str]:
     return input, input.replace(".asm", "Cleaned.asm")
     
 
+def clean_file(infile, outfile):
+    lines = []
+    with open(infile) as f:
+        for line in f.readlines():
+            if line.startswith("//") or line=="\n" or line.startswith(" "):
+                continue
+            lines.append(line)
+    with open(outfile, "w") as f:
+        f.writelines(lines)
 
 def main():
     if len(sys.argv) != 2:
@@ -25,14 +34,7 @@ def main():
         print(f"could not parse filepath: {e}")
         sys.exit(1)
     try:
-        lines = []
-        with open(infile) as f:
-            for line in f.readlines():
-                if line.startswith("//") or line=="\n" or line.startswith(" "):
-                    continue
-                lines.append(line)
-        with open(outfile, "w") as f:
-            f.writelines(lines)
+        clean_file(infile, outfile)
     except Exception as e:
         print(f"could not manipulate files: {e}")
         sys.exit(1)

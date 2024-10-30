@@ -44,6 +44,17 @@ class Translator:
         line = line.split('//')[0]  # remove comments
         return line.strip()  # remove whitespace
     
+    def clean_instructions(self):
+        if not self.asm_instructions:
+            raise Exception("no assembly code to clean!")
+        cleaned = []
+        for line in self.asm_instructions:
+            if line.startswith("//") or line=="\n" or line.startswith(" "):
+                continue
+            cleaned.append(line)
+        self.asm_instructions = cleaned
+
+    
     def write_output(self):
         """Writes the binary instructions to the output file."""
         instructions = "\n".join(self.asm_instructions)
@@ -118,6 +129,7 @@ if __name__ == '__main__':
         output = f"{input_path}/{name}.asm"
         writer.output_file = f"{input_path}/{name}.asm"
         writer.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
+        writer.clean_instructions() # remove comments and whitespace
         writer.write_output()
         print(f"VM translation complete. Output written to {output}")
     elif os.path.isfile(input_path):
@@ -125,6 +137,7 @@ if __name__ == '__main__':
         print(f"Starting VM translation of {translator.name}.vm...")
         translator.translate()
         translator.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
+        translator.clean_instructions() # remove comments and whitespace
         translator.write_output()
         print(f"VM translation complete. Output written to {translator.output_file}")
     else:
