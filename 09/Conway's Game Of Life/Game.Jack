@@ -2,8 +2,8 @@ class Game { // TODO: combine with Board.Jack
     field Array board;
     
     // screen is 512px X 256px so each cell will be 16px and the board will have 32cells X 16cells
-    static int rows;
-    static int cols;
+    static int Rows;
+    static int Cols;
 
 
     /** inits the Game state */
@@ -44,6 +44,7 @@ class Game { // TODO: combine with Board.Jack
             let temp = board[i];
             while (j < cols) {
                 do Game.drawCell(i, j, temp[j]);
+                do Sys.wait(50);
                 let j = j+1;
             }
             let i = i+1;
@@ -59,18 +60,19 @@ class Game { // TODO: combine with Board.Jack
         let rows = Game.getRows();
         let cols = Game.getCols();
         let i = 0;
-        let next_board = Game.initBoard();
+        let next_board = Array.new(rows);
         while (i < rows) {
+            let temp = Array.new(cols);
             let j = 0;
-            let temp = next_board[i];
             while (j < cols) {
                 let neighbors = Game.neighbors(board, i, j);
-                let temp[j] = Main.eq(neighbors, 2) | Main.eq(neighbors, 3); // selection for cells
+                let temp[j] = (neighbors = 2) | (neighbors = 3); // selection for cells
                 let j = j+1;
             }
+            let next_board[i] = temp;
             let i = i+1;
         }
-        do board.dispose();
+        do dispose();
         let board = next_board;
         return;
     }
@@ -79,14 +81,10 @@ class Game { // TODO: combine with Board.Jack
         var Array temp;
         let temp = board[i];
         let temp[j] = ~temp[j];
-        return;
-    }
-    method void updateCell(int i, int j) {
-        var Array temp;
-        let temp = board[i];
         do Game.drawCell(i, j, temp[j]);
         return;
     }
+
 
     method void dispose() {
         var int i;
@@ -103,70 +101,52 @@ class Game { // TODO: combine with Board.Jack
 
     /** returns the number of alive neighbors of cell (i,j) */
     function int neighbors(Array board, int i, int j) {
-        var int sum;
+        var int sum, di, dj;
         var Array temp;
         let sum = 0;
-        if (Game.inbounds(i+1, j))  {
-            let temp = board[i+1];
-            if (temp[j]) {let sum = sum + 1;}
-        }
-        if (Game.inbounds(i+1, j-1)) {
-            let temp = board[i+1];
-            if (temp[j-1]) {let sum = sum + 1;}
-        }
-        if (Game.inbounds(i+1, j+1)) {
-            let temp = board[i+1];
-            if (temp[j+1]) {let sum = sum + 1;}
-        }
-        if (Game.inbounds(i-1, j)) {
-            let temp = board[i-1];
-            if (temp[j]) {let sum = sum + 1;}
-        }
-        if (Game.inbounds(i-1, j-1)) {
-            let temp = board[i-1];
-            if (temp[j-1]) {let sum = sum + 1;}
-        }
-        if (Game.inbounds(i-1, j+1)) {
-            let temp = board[i-1];
-            if (temp[j+1]) {let sum = sum + 1;}
-        }
-        if (Game.inbounds(i, j+1)) {
-            let temp = board[i];
-            if (temp[j+1]) {let sum = sum + 1;}
-        }
-        if (Game.inbounds(i, j-1)) {
-            let temp = board[i];
-            if (temp[j-1]) {let sum = sum + 1;}
+        let di = -1;
+        while (di < 2) {
+            let dj = -1;
+            while (dj < 2) {
+                if (~((di=0)&(dj=0))) {
+                    if (Game.inbounds(i+di, j+dj)){
+                        let temp = board[i+di];
+                        if (temp[j+dj]) {let sum = sum+1;}
+                    }
+                }
+                let dj = dj+1;
+            }
+            let di = di+1;
         }
         return sum;
     }
 
     /** returns true if (i,j) is in the bounds of the board */
     function boolean inbounds(int i, int j) {
-        return ((-1 < i)&(i < Game.getRows())&(-1 < j)&(j < Game.getCols()));
+        return ((-1 < i)&(-1 < j)&(i < Game.getRows())&(j < Game.getCols()));
     }
 
     /** draws cell i, j in the provided color */
     function void drawCell(int i, int j, boolean color) {
         var int real_i, real_j;
-        let real_i = 16*i;
+        let real_i = 16*i; // the coords on the screen pixel grid
         let real_j = 16*j;
         do Screen.setColor(color);
         do Screen.drawRectangle(real_j, real_i, real_j+15, real_i+15);
         return;
     }
 
-    function void setSize(int Y, int X) {
-        let rows = Y;
-        let cols = X;
+    function void setSize(int rows, int cols) {
+        let Rows = rows;
+        let Cols = cols;
         return;
     }
 
     function int getRows() {
-        return rows;
+        return Rows;
     }
     
     function int getCols() {
-        return cols;
+        return Cols;
     }
 }
