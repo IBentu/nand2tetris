@@ -1,0 +1,51 @@
+// This file is part of nand2tetris, as taught in The Hebrew University, and
+// was written by Aviv Yaish. It is an extension to the specifications given
+// [here](https://www.nand2tetris.org) (Shimon Schocken and Noam Nisan, 2017),
+// as allowed by the Creative Common Attribution-NonCommercial-ShareAlike 3.0
+// Unported [License](https://creativecommons.org/licenses/by-nc-sa/3.0/).
+
+
+// The ExtendAlu chip is an extension of the standard ALU which also supports
+// shift operations.
+// The inputs of the extended ALU are instruction[9], x[16], y[16].
+// The "ng" and "zr" output pins behave the same as in the regular ALU.
+// The "out" output is defined as follows:
+// If instruction[8]=1 and instruction[7]=1 the output is identical to the 
+// regular ALU, where:
+// instruction[5]=zx, instruction[4]=nx, ..., instruction[0]=no
+// Else, if instruction[8]=0 and instruction[7]=1, the output is a shift:
+// - If instruction[4] == 0, the input "y" will be shifted, otherwise "x".
+// - If instruction[5] == 0, the shift will be a right-shift, otherwise left.
+// - All other inputs are undefined.
+
+CHIP ExtendAlu {
+     IN x[16], y[16], instruction[9];
+     OUT out[16], zr, ng;
+     
+     PARTS:
+     ALU(x=x, y=y, zx=instruction[5], nx=instruction[4], zy=instruction[3], ny=instruction[2], f=instruction[1], no=instruction[0], out=outALU, zr=zrALU, ng=ngALU );
+     And(a=instruction[8], b=instruction[7], out=baseALU);
+
+     Not(in=instruction[8], out=notInstr8);
+
+     And(a=notInstr8, b=instruction[7], out=shift);
+
+     And(a=shift, b=instruction[4], out=shiftX);
+     And(a=shift, b=instruction[5], out=leftshift);
+
+     Mux16(a=y, b=x, sel=shiftX, out=XorY);
+     ShiftLeft(in=XorY, out=leftShiftedXorY);
+     ShiftRight(in=XorY, out=rightShiftedXorY);
+     Mux16(a=rightShiftedXorY, b=leftShiftedXorY, sel=leftshift, out=shiftedXorY);
+
+     Mux16(a=shiftedXorY, b=false, sel=false, out[0..7]=shiftLSB, out[8..14]=shiftAlmostMSB, out[15]=shiftMSB);
+
+     Or8Way(in=shiftLSB, out=notZrShift1);
+     Or8Way(in[0..6]=shiftAlmostMSB, in[7]=shiftMSB, out=notZrShift2);
+     Or(a=notZrShift1, b=notZrShift2, out=notZrShift);
+     Not(in=notZrShift, out=zrShift);
+
+     Mux16(a=shiftedXorY, b=outALU , sel=baseALU, out=out); // since all other input are undefined we can send either the normal ALU output of the shift
+     Mux(a=zrShift, b=zrALU, sel=baseALU, out=zr);
+     Mux(a=shiftMSB, b=ngALU, sel=baseALU, out=ng); // // MSB == 1 => number < 0
+}

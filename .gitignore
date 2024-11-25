@@ -1,2 +1,18 @@
 *.pyc
 09/Conway's\ Game\ Of\ Life/*.vm
+AUTHORS
+*.zip
+OLD
+*.cmp
+*.tst
+*.out
+*/template
+05/*.hack
+06/*/*.asm
+06/*/*.hack
+07/*/*/*
+08/*/*/*
+09/*/*
+10/*/*
+11/*/*
+12/*/*

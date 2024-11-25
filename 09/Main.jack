@@ -58,6 +58,7 @@ class Main {
             let lastKey = key;
             let key = Keyboard.keyPressed();
             if (key = lastKey | key = 0) {
+                /*
                 let i = 0;
                 while (i < 2147483646) {
                     let j = 0;
@@ -66,8 +67,9 @@ class Main {
                     }
                     let i = i+1;
                 }
+                */
+                do Sys.wait(1000);
             }
-            do Sys.wait(1000);
             let key = Keyboard.keyPressed();
             // TODO:
             //  maybe add cursor/border for current selected cell?
@@ -77,7 +79,7 @@ class Main {
         while ( ~(Keyboard.keyPressed() = enterKey) & ~(Keyboard.keyPressed() = escKey) & rounds < 1000) {
             do game.step();
             do game.draw();
-            do Sys.wait(100000/gameSpeed);
+            do Sys.wait(10000/gameSpeed);
             let rounds = rounds+1;
         }
         do game.dispose();         

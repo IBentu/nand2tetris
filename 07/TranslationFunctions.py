@@ -177,7 +177,9 @@ def pop_other(segment: str, offset: str) -> str:
 ALL_ARITHMETIC_LOGICAL_OPS = ["add", "sub", "and", "or", "eq", "gt", "lt", "neg", "not"]
 UNARY_OPS_MAP = {
     "neg": "M=-M",
-    "not": "M=!M"
+    "not": "M=!M",
+    "shiftleft": "M=M<<",
+    "shiftright": "M=M>>"
 }
 BINARY_OPS_MAP = {
     "add": lambda _: "D=D+M",
@@ -206,7 +208,6 @@ def arithmetic_logical_instruction(op: str, jump_num: int) -> str:
     """Returns the operation's instructions string"""
     if op in UNARY_OPS_MAP.keys():
         return "\n".join([
-        "\n/// neg ///",
         DEC_STACK,
         "@SP",
         "A=M",

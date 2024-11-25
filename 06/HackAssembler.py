@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 COMP_MAP = { # "M" = "A"
     "0": "101010",
@@ -18,8 +18,18 @@ COMP_MAP = { # "M" = "A"
     "D-A": "010011",
     "A-D": "000111",
     "D&A": "000000",
-    "D|A": "010101"
+    "D|A": "010101",
+    "A<<": "100000",
+    "D<<": "110000",
+    "A>>": "000000",
+    "D>>": "010000",
 }
+EXTENDED_COMMANDS = [
+    "A<<",
+    "D<<",
+    "A>>",
+    "D>>",
+]
 DEST_MAP = {
     "M": "001",
     "D": "010",
@@ -111,6 +121,7 @@ class Assembler:
     def translate_c_instruction(self, instruction):
         """Translates a C-instruction to binary."""
         a = "0"
+        x = "111"
         dest = "000"
         jump = "000"
         if "=" in instruction:
@@ -124,8 +135,10 @@ class Assembler:
         if "M" in instruction:
             a = "1"
             instruction = instruction.replace("M", "A")
+        if instruction in EXTENDED_COMMANDS:
+            x = "101"
         comp = COMP_MAP[instruction]
-        return "111"+a+comp+dest+jump
+        return x+a+comp+dest+jump
         
 
     def get_symbol_address(self, symbol):
@@ -151,10 +164,18 @@ class Assembler:
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("Usage: python3 Assembler.py <file.asm>")
+        print("Usage: Assembler <path/to/file.asm | directory/of/.asm/files>")
         sys.exit(1)
-
-    input_file = sys.argv[1]
-    assembler = Assembler(input_file)
-    assembler.assemble()
-    print(f"Assembly complete. Output written to {assembler.output_file}")
+    input_path = sys.argv[1]
+    if os.path.isdir(input_path):
+        for filename in os.listdir(input_path):
+            if not filename.endswith(".asm"):
+                continue
+            assembler = Assembler(os.path.join(input_path, filename))
+            assembler.assemble()
+            print(f"Assembled {assembler.output_file}")
+        print("Assembly complete.")
+    else:
+        assembler = Assembler(input_path)
+        assembler.assemble()
+        print(f"Assembly complete. Output written to {assembler.output_file}")

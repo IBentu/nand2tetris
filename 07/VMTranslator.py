@@ -48,12 +48,12 @@ class Translator:
         if not self.asm_instructions:
             raise Exception("no assembly code to clean!")
         cleaned = []
+        self.asm_instructions = ("\n".join(self.asm_instructions)).split("\n")
         for line in self.asm_instructions:
-            if line.startswith("//") or line=="\n" or line.startswith(" "):
+            if line.startswith("//") or set(line).issubset(set(" /\n")):
                 continue
             cleaned.append(line)
-        self.asm_instructions = cleaned
-
+        self.asm_instructions = cleaned        
     
     def write_output(self):
         """Writes the binary instructions to the output file."""
@@ -104,7 +104,7 @@ class Translator:
         
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("Usage: python3 VMTranslator.py <file.vm>")
+        print("Usage: VMTranslator <file.vm>||<directory>")
         sys.exit(1)
     input_path = sys.argv[1]
     if os.path.isdir(input_path):
@@ -128,7 +128,7 @@ if __name__ == '__main__':
             writer.asm_instructions.extend(t.asm_instructions)
         output = f"{input_path}/{name}.asm"
         writer.output_file = f"{input_path}/{name}.asm"
-        writer.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
+        #writer.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
         writer.clean_instructions() # remove comments and whitespace
         writer.write_output()
         print(f"VM translation complete. Output written to {output}")
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         translator = Translator(input_path)
         print(f"Starting VM translation of {translator.name}.vm...")
         translator.translate()
-        translator.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
+        #translator.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
         translator.clean_instructions() # remove comments and whitespace
         translator.write_output()
         print(f"VM translation complete. Output written to {translator.output_file}")
