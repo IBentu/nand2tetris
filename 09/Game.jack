@@ -1,4 +1,4 @@
-class Game { // TODO: combine with Board.Jack
+class Game { // Conway's Game of Life
     field Array board;
     
     // screen is 512px X 256px so each cell will be 16px and the board will have 32cells X 16cells
