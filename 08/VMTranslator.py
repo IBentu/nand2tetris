@@ -107,6 +107,7 @@ if __name__ == '__main__':
         print("Usage: VMTranslator <file.vm>||<directory>")
         sys.exit(1)
     input_path = os.path.abspath(sys.argv[1])
+    writer = None
     if os.path.isdir(input_path):
         name = os.path.basename(input_path)
         translators = []
@@ -120,24 +121,23 @@ if __name__ == '__main__':
             translators.append(translator)
         if not len(translators):
             print("no .vm files in directory")
-            sys.exit(0)
+            sys.exit(1)
         writer = translators[0]
         for t in translators[1:]:
             writer.asm_instructions.extend(t.asm_instructions)
-        output = f"{input_path}/{name}.asm"
-        writer.output_file = output
-        writer.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
-        writer.clean_instructions() # remove comments and whitespace
-        writer.write_output()
-        print(f"VM translation complete. Output written to {output}")
+        writer.output_file = f"{input_path}/{name}.asm"
     elif os.path.isfile(input_path):
-        translator = Translator(input_path)
-        print(f"Starting VM translation of {translator.name}.vm...")
-        translator.translate()
-        translator.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
-        translator.clean_instructions() # remove comments and whitespace
-        translator.write_output()
-        print(f"VM translation complete. Output written to {translator.output_file}")
+        writer = Translator(input_path)
+        print(f"Starting VM translation of {writer.name}.vm...")
+        writer.translate()
     else:
         print("ERROR: invalid path")
         sys.exit(1)
+    if writer is None:
+        print("ERROR")
+        sys.exit(1)
+
+    writer.asm_instructions.insert(0, bootstrap()) # add the bootstrap code to the start
+    writer.clean_instructions() # remove comments and whitespace
+    writer.write_output()
+    print(f"VM translation complete. Output written to {writer.output_file}")
