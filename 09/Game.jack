@@ -27,7 +27,7 @@ class Game { // Conway's Game of Life
                 let temp[j] = false;
                 let j = j+1;
             }
-            let i = i + 1;
+            let i = i+1;
         }
         return board;
     }
