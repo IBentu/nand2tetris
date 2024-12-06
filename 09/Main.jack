@@ -65,7 +65,7 @@ class Main {
         while ((~(Keyboard.keyPressed() = escKey)) & (rounds < 1000)) {
             do game.step();
             do game.draw();
-            do Sys.wait(10000/gameSpeed);
+            do Sys.wait(Math.divide(10000, gameSpeed));
             let rounds = rounds+1;
         }
         do game.dispose();         

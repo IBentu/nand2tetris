@@ -93,10 +93,10 @@ class Game { // Conway's Game of Life
         let i = 0;
         while (i < Game.getRows()) {
             let temp = board[i];
-            do temp.dispose();
+            do Memory.deAlloc(temp);
             let i = i+1;
         }
-        do board.dispose();
+        do Memory.deAlloc(board);
         return;
     }
 
