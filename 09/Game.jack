@@ -44,7 +44,6 @@ class Game { // Conway's Game of Life
             let temp = board[i];
             while (j < cols) {
                 do Game.drawCell(i, j, temp[j]);
-                do Sys.wait(50);
                 let j = j+1;
             }
             let i = i+1;
@@ -57,6 +56,7 @@ class Game { // Conway's Game of Life
         var int i, j, rows, cols;
         var Array next_board, temp;
         var int neighbors;
+        var boolean curr_cell;
         let rows = Game.getRows();
         let cols = Game.getCols();
         let i = 0;
@@ -65,8 +65,9 @@ class Game { // Conway's Game of Life
             let temp = Array.new(cols);
             let j = 0;
             while (j < cols) {
+                let curr_cell = getCell(i, j);
                 let neighbors = Game.neighbors(board, i, j);
-                let temp[j] = (neighbors = 2) | (neighbors = 3); // selection for cells
+                let temp[j] = (((neighbors = 2)&curr_cell) | (neighbors = 3)); // selection for cells
                 let j = j+1;
             }
             let next_board[i] = temp;
@@ -99,6 +100,16 @@ class Game { // Conway's Game of Life
         return;
     }
 
+    // returns 0 if out of bounds
+    method boolean getCell(int i, int j) {
+        var Array temp;
+        if (~Game.inbounds(i, j)) {
+            return false;
+        }
+        let temp = board[i];
+        return temp[j];
+    }
+
     /** returns the number of alive neighbors of cell (i,j) */
     function int neighbors(Array board, int i, int j) {
         var int sum, di, dj;
@@ -129,8 +140,8 @@ class Game { // Conway's Game of Life
     /** draws cell i, j in the provided color */
     function void drawCell(int i, int j, boolean color) {
         var int real_i, real_j;
-        let real_i = 16*i; // the coords on the screen pixel grid
-        let real_j = 16*j;
+        let real_i = ^^^^i; // == i*16 the coords on the screen pixel grid
+        let real_j = ^^^^j;
         do Screen.setColor(color);
         do Screen.drawRectangle(real_j, real_i, real_j+15, real_i+15);
         return;

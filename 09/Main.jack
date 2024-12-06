@@ -7,7 +7,6 @@ class Main {
         var int key, lastKey;
         var int gameSpeed, rounds;
         var int rows, cols;
-        var boolean UP, DOWN, LEFT, RIGHT;
 
         // consts
         let enterKey = 128;
@@ -34,21 +33,17 @@ class Main {
         let game = Game.new();
         let i = 0;
         let j = 0;
+        do Sys.wait(500);
         let key = Keyboard.keyPressed();
         while (~(key = enterKey)) {
 
-            let UP = (0 < i) & ((key = wKey) | (key = WKey));
-            let LEFT = (0 < j) & ((key = aKey) | (key = AKey));
-            let DOWN = (i < rows-1) & ((key = sKey) | (key = SKey));
-            let RIGHT = (j < cols-1) & ((key = dKey) | (key = DKey));
-
-            if (UP) {
+            if ((0 < i) & ((key = wKey) | (key = WKey))) { // UP
                 let i = i-1;
-            } else { if (LEFT) {
+            } else { if ((0 < j) & ((key = aKey) | (key = AKey))) { // LEFT
                 let j = j-1;
-            } else { if (DOWN) {
+            } else { if ((i < rows-1) & ((key = sKey) | (key = SKey))) { // DOWN
                 let i = i+1;
-            } else { if (RIGHT) {
+            } else { if ((j < cols-1) & ((key = dKey) | (key = DKey))) { // RIGHT
                 let j = j+1;
             } else { if (key = spaceKey) { // change cell
                 do game.flipCell(i, j);
@@ -58,26 +53,16 @@ class Main {
             
             let lastKey = key;
             let key = Keyboard.keyPressed();
-            if (key = lastKey | key = 0) {
-                /*
-                let i = 0;
-                while (i < 2147483646) {
-                    let j = 0;
-                    while (j < 2147483646) {
-                        let j = j+1; // not delaying at all...
-                    }
-                    let i = i+1;
-                }
-                */
-                do Sys.wait(10000);
+            if (lastKey = key) {
+                do Sys.wait(1000);
             }
             let key = Keyboard.keyPressed();
             // TODO:
             //  maybe add cursor/border for current selected cell?
         }
-        let gameSpeed = 5;
+        let gameSpeed = 15;
         let rounds = 0;
-        while ( ~(Keyboard.keyPressed() = enterKey) & ~(Keyboard.keyPressed() = escKey) & rounds < 1000) {
+        while ((~(Keyboard.keyPressed() = escKey)) & (rounds < 1000)) {
             do game.step();
             do game.draw();
             do Sys.wait(10000/gameSpeed);
@@ -89,88 +74,13 @@ class Main {
     }
 
     function void printControls() {
-        do Output.printString("welcome to Conway's Game of Life\nuse WASD to move curser, space to flip cell state, and ENTER to start the game");
-        return;
-    }
-
-    function void drawControlsScreen() {  // TODO change this to just print the manual
-        var int memAddress; 
-        let memAddress = 16384;
-        // column 0
-        do Memory.poke(memAddress, 3602);
-        do Memory.poke(memAddress +32, -24781);
-        do Memory.poke(memAddress +64, -31949);
-        do Memory.poke(memAddress +96, -28877);
-        do Memory.poke(memAddress +128, -25037);
-        do Memory.poke(memAddress +160, -26573);
-        do Memory.poke(memAddress +192, -24769);
-        do Memory.poke(memAddress +224, 3614);
-        do Memory.poke(memAddress +704, 19384);
-        do Memory.poke(memAddress +736, 23176);
-        do Memory.poke(memAddress +768, 27272);
-        do Memory.poke(memAddress +800, 27272);
-        do Memory.poke(memAddress +832, 19384);
-        // column 1
-        do Memory.poke(memAddress +1, 775);
-        do Memory.poke(memAddress +33, 879);
-        do Memory.poke(memAddress +65, -15519);
-        do Memory.poke(memAddress +97, -14585);
-        do Memory.poke(memAddress +129, -6393);
-        do Memory.poke(memAddress +161, -415);
-        do Memory.poke(memAddress +193, 15471);
-        do Memory.poke(memAddress +225, 6151);
-        do Memory.poke(memAddress +289, -16384);
-        do Memory.poke(memAddress +321, 8192);
-        do Memory.poke(memAddress +353, 16384);
-        do Memory.poke(memAddress +385, ~32767);
-        do Memory.poke(memAddress +417, 24576);
-        do Memory.poke(memAddress +705, 19031);
-        do Memory.poke(memAddress +737, 19138);
-        do Memory.poke(memAddress +769, 19282);
-        do Memory.poke(memAddress +801, 19282);
-        do Memory.poke(memAddress +833, 12882);
-        // column 2
-        do Memory.poke(memAddress +2, -8144);
-        do Memory.poke(memAddress +34, -4048);
-        do Memory.poke(memAddress +66, 6192);
-        do Memory.poke(memAddress +98, 6200);
-        do Memory.poke(memAddress +130, -967);
-        do Memory.poke(memAddress +162, 7199);
-        do Memory.poke(memAddress +194, 3599);
-        do Memory.poke(memAddress +226, 1542);
-        do Memory.poke(memAddress +290, -4538);
-        do Memory.poke(memAddress +322, 8874);
-        do Memory.poke(memAddress +354, 25318);
-        do Memory.poke(memAddress +386, 8866);
-        do Memory.poke(memAddress +418, -4446);
-        do Memory.poke(memAddress +706, 11783);
-        do Memory.poke(memAddress +738, 25121);
-        do Memory.poke(memAddress +770, -23037);
-        do Memory.poke(memAddress +802, -24031);
-        do Memory.poke(memAddress +834, 11783);
-        // column 3
-        do Memory.poke(memAddress +3, 16128);
-        do Memory.poke(memAddress +35, 1921);
-        do Memory.poke(memAddress +67, 387);
-        do Memory.poke(memAddress +99, 1923);
-        do Memory.poke(memAddress +131, 7943);
-        do Memory.poke(memAddress +163, 14343);
-        do Memory.poke(memAddress +195, 15886);
-        do Memory.poke(memAddress +227, 8076);
-        do Memory.poke(memAddress +707, 7645);
-        do Memory.poke(memAddress +739, 5193);
-        do Memory.poke(memAddress +771, 3273);
-        do Memory.poke(memAddress +803, 5193);
-        do Memory.poke(memAddress +835, 5577);
-        // column 4
-        do Memory.poke(memAddress +4, 30);
-        do Memory.poke(memAddress +36, 126);
-        do Memory.poke(memAddress +68, 230);
-        do Memory.poke(memAddress +100, 16582);
-        do Memory.poke(memAddress +132, -7994);
-        do Memory.poke(memAddress +164, 16614);
-        do Memory.poke(memAddress +196, 126);
-        do Memory.poke(memAddress +228, 30);
+        do Output.printString("welcome to Conway's Game of Life.");
+        do Output.println();
+        do Output.printString("use WASD to move curser, space to flip cell state, and ENTER to start the game. press ENTER to continue...");
+        do Output.println();
+        do Output.printString("welcome to Conway's Game of Life. use WASD to move curser, space to flip cell state, and ENTER to start the game.");
+        do Output.println();
+        do Output.printString("press ENTER to continue...");
         return;
     }
 }
