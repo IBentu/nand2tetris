@@ -22,7 +22,8 @@ class Main {
         let DKey = 68;
         let escKey = 140;
         
-        do Main.drawControlsScreen();
+        do Main.printControls();
+        //do Main.drawControlsScreen();
         while (~(Keyboard.keyPressed() = enterKey)) {
             do Sys.wait(20); // show controls until enter is pressed
         }
@@ -84,6 +85,11 @@ class Main {
         }
         do game.dispose();         
         do Sys.halt();
+        return;
+    }
+
+    function void printControls() {
+        do Output.printString("welcome to Conway's Game of Life\nuse WASD to move curser, space to flip cell state, and ENTER to start the game");
         return;
     }
 
