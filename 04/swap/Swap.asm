@@ -75,7 +75,6 @@ M=0
     @R2
     M=0 // i = 0
 
-    // TODO: iterate array. if num == max swap to min, if num == min swap to max.
 (LOOP_TWO)
     @R2
     D=M

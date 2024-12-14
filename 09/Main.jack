@@ -57,8 +57,6 @@ class Main {
                 do Sys.wait(1000);
             }
             let key = Keyboard.keyPressed();
-            // TODO:
-            //  maybe add cursor/border for current selected cell?
         }
         let gameSpeed = 15;
         let rounds = 0;
