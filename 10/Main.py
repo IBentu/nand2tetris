@@ -1,5 +1,6 @@
 import sys, os
 from JackTokenizer import Tokenizer
+from TokenParser import TokenParser
 
 class Analyzer:
     def __init__(self, input_file: str):
@@ -16,10 +17,7 @@ class Analyzer:
         self.name = path[0]
         self.output_file = input_file.replace('.jack', '.xml')
         self.tokenizer = None
-        self.asm_instructions = []
-        self.curr_function = ""
-        self.num_of_returns = 0
-        self.num_of_jumps = 0
+        self.parser = None
 
     
     def clean_instructions(self):
@@ -32,24 +30,23 @@ class Analyzer:
                 continue
             cleaned.append(line)
         self.asm_instructions = cleaned        
-    
+
     def write_output(self):
         """Writes the binary instructions to the output file."""
-        instructions = "\n".join(self.asm_instructions)
+        token_tree = self.parser.OutputString()
         with open(self.output_file, 'w') as file:
-            file.write(instructions)
+            file.write(token_tree)
     def write_output_tokens(self):
         """Writes the binary instructions to the output file."""
-        with open(self.output_file, 'w') as file:
-            file.write(f"<tokens>\n  {"\n  ".join(self.tokenizer.tokens)}\n</tokens>\n")
+        with open(self.output_file.replace(".xml", "_tokens.xml"), 'w') as file:
+            file.write(f"<tokens>\n  {"\n  ".join(self.tokenizer.tokenStrings)}\n</tokens>\n")
 
-    
     def analyze(self):
         """Coordinates the jack Analyzing process."""
         self.tokenizer = Tokenizer(self.input_file)
         self.tokenizer.tokenize()
-
-            
+        self.parser = TokenParser(self.tokenizer.tokens)
+        self.parser.CompileClass()
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -71,15 +68,15 @@ if __name__ == '__main__':
         if not len(analyzers):
             print("no .jack files in directory")
             sys.exit(1)
-        for a in analyzers:
-            a.write_output_tokens()
+        for writer in analyzers:
+            writer.write_output()
         print(f"Analyzing complete. Output files written in {input_path}")
 
     elif os.path.isfile(input_path):
         writer = Analyzer(input_path)
         print(f"Starting anazlyzing of {writer.name}.jack...")
         writer.analyze()
-        writer.write_output_tokens()
+        writer.write_output()
         print(f"Analyzing complete. Output written to {writer.output_file}")
     else:
         print("ERROR: invalid path")

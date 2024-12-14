@@ -3,7 +3,8 @@ from Token import Token
 class Tokenizer:
     def __init__(self, input):
         self.infile = open(input, "rb")
-        self.tokens = []
+        self.tokens: list[Token] = []
+        self.tokenStrings: list[str] = []
         self.errors = []
         self.line = 1
     
@@ -12,7 +13,8 @@ class Tokenizer:
             t = self.nextToken()
             if t is None:
                 continue
-            self.tokens.append(t.TokenString())
+            self.tokenStrings.append(t.OutputString())
+            self.tokens.append(t)
         if len(self.errors):
             print(f"Errors tokenizing:\n{"\n".join(self.errors)}")
             exit(1)

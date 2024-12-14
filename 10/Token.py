@@ -57,21 +57,24 @@ class Token:
         return LEXICAL_TYPE_IDENTIFIER, token
     
             
-    def TokenString(self) -> str:
+    def OutputString(self) -> str:
         return f"<{self.type}> {self.token} </{self.type}>"
     
     def __repr__(self):
-        return self.TokenString()
+        return self.OutputString()
     
     # converts symbols: ">" = "&gt", "<" = "&lt", "&" = "&amp"
     def convert_symbol(symbol: str) -> str:
         if symbol == ">":
-            return "&gt"
+            return "&gt;"
         if symbol == "<":
-            return "&lt"
+            return "&lt;"
         if symbol == "&":
-            return "&amp"
+            return "&amp;"
         return symbol
+
+    def __eq__(self, other):
+        return self.type == other.type and self.token == other.token
         
         
         
