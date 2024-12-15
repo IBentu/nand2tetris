@@ -1,7 +1,6 @@
 from Token import Token, BRA_TOKEN, KET_TOKEN, SEMICOLON_TOKEN, VAR_TOKEN
 from Expression import ExpressionList
 from Statement import Statements
-from TokenParser import TokenParser
 
 class ClassVarDec:
     def __init__(self, tokens: list[Token]):
@@ -24,13 +23,13 @@ class ParameterList:
 
 class SubroutineBody:
     def __init__(self, tokens: list[Token]):
+        from TokenParser import TokenParser
         index = 1 # tokens start with '{'
         self.varDecs: list[VarDec] = []
         while VarDec.isVarDec(tokens[index]):
             var_tokens = TokenParser.getTokensBetween(tokens, VAR_TOKEN, SEMICOLON_TOKEN, index)
             index += len(var_tokens)
             self.varDecs.append(VarDec(var_tokens))
-
         self.statements = Statements(tokens[index:-1]) # tokens ends with '}'
 
     def OutputString(self) -> str:
@@ -61,6 +60,7 @@ class VarDec:
 
 
 def parseSubroutineCall(tokens: list[Token]) -> list[Token]:
+    from TokenParser import TokenParser
     ret = []
     index = 0
     while tokens[index] != BRA_TOKEN:

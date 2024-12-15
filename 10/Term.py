@@ -1,9 +1,9 @@
 from Token import Token, LEXICAL_TYPE_SYMBOL, BRA_TOKEN, KET_TOKEN, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN
-from Expression import Expression
-from Class import parseSubroutineCall
 
 class Term:
     def __init__(self, tokens: list[Token]):
+        from Class import parseSubroutineCall
+        from Expression import Expression
         self.tokens = []
         if len(tokens) == 1 or tokens[0].type == LEXICAL_TYPE_SYMBOL:
             self.tokens = tokens

@@ -1,12 +1,13 @@
-from Token import Token, LEXICAL_TYPE_SYMBOL, COMMA_TOKEN
+from Token import Token, COMMA_TOKEN
 from Term import Term
 
 class Expression:
     def __init__(self, tokens: list[Token]):
+        print(tokens)
         self.parsed_tokens = []
         term_tokens = []
         for t in tokens:
-            if t.type != LEXICAL_TYPE_SYMBOL:
+            if t.token not in Token.ops:
                 term_tokens.append(t)
             else:
                 self.parsed_tokens.append(Term(term_tokens))
@@ -22,10 +23,8 @@ class ExpressionList:
         self.expressions = []
         if not len(tokens):
             return
-        index = 0
         expression_tokens = []
-        while index < len(tokens):
-            curr = tokens[index]
+        for curr in tokens:
             if curr == COMMA_TOKEN:
                 self.expressions.append(Expression(expression_tokens))
                 expression_tokens = []

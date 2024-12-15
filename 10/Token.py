@@ -25,6 +25,7 @@ class Token:
     symbols = ["{", "}", "(", ")", "[", "]", ".", ",", ";", 
                "+", "-", "*", "/", "&", '|', "<", ">", "=", 
                "~", "^", "#"]
+    ops = ["+", "-", "*", "/", "&", "|", "<", ">", "="]
     
     def __init__(self, token):
         self.type, self.token = Token.classify(token)
@@ -59,7 +60,7 @@ class Token:
         return f"<{self.type}> {self.token} </{self.type}>"
     
     def __repr__(self):
-        return self.OutputString()
+        return str(self.token)
     
     # converts symbols: ">" = "&gt", "<" = "&lt", "&" = "&amp"
     def convert_symbol(symbol: str) -> str:

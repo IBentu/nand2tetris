@@ -3,13 +3,15 @@ from Token import Token, LET_TOKEN, IF_TOKEN, ELSE_TOKEN, WHILE_TOKEN,\
                   KET_TOKEN, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN,\
                   CURLY_BRA_TOKEN, CURLY_KET_TOKEN, EQ_TOKEN
 from Expression import Expression
-from TokenParser import TokenParser
-from Class import parseSubroutineCall
 
 class Statement:
     def __init__(self, name, tokens):
         self.tokens = tokens
         self.name = name
+    
+    def token_parser(self, tokens: list[Token], bra: Token, ket: Token, start_from : int = 0) -> list[Token]:
+        from TokenParser import TokenParser
+        return TokenParser.getTokensBetween(tokens, bra, ket, start_from)
     
     def OutputString(self) -> str:
         return f"<{self.name}>\n  {"\n  ".join([t.OutputString() for t in self.tokens])}\n</{self.name}>"
@@ -17,34 +19,35 @@ class Statement:
 class Statements:
     def __init__(self, tokens: list[Token]):
         self.statements: list[Statement] = []
+        parser = Statement("", None)
         index = 0
         while index < len(tokens):
             curr = tokens[index]
             if curr == LET_TOKEN:
-                let_tokens = TokenParser.getTokensBetween(tokens, LET_TOKEN, SEMICOLON_TOKEN, index)
+                let_tokens = parser.token_parser(tokens, LET_TOKEN, SEMICOLON_TOKEN, index)
                 index += len(let_tokens)
                 self.statements.append(LetStatement(let_tokens))
             elif curr == IF_TOKEN:
-                if_tokens = TokenParser.getTokensBetween(tokens, IF_TOKEN, CURLY_KET_TOKEN, index)
+                if_tokens = parser.token_parser(tokens, IF_TOKEN, CURLY_KET_TOKEN, index)
                 index += len(if_tokens)
                 else_tokens_lists = []
                 curr = tokens[index]
                 while curr == ELSE_TOKEN:
-                    else_tokens = TokenParser.getTokensBetween(tokens, curr, CURLY_KET_TOKEN, index)
+                    else_tokens = parser.token_parser(tokens, curr, CURLY_KET_TOKEN, index)
                     index += len(else_tokens)
                     else_tokens_lists.append(else_tokens)
                     curr = tokens[index]
                 self.statements.append(IfStatement(if_tokens, else_tokens))
             elif curr == WHILE_TOKEN:
-                while_tokens = TokenParser.getTokensBetween(tokens, WHILE_TOKEN, CURLY_KET_TOKEN, index)
+                while_tokens = parser.token_parser(tokens, WHILE_TOKEN, CURLY_KET_TOKEN, index)
                 index += len(while_tokens)
                 self.statements.append(WhileStatement(while_tokens))
             elif curr == DO_TOKEN:
-                do_tokens = TokenParser.getTokensBetween(tokens, DO_TOKEN,  SEMICOLON_TOKEN, index)
+                do_tokens = parser.token_parser(tokens, DO_TOKEN,  SEMICOLON_TOKEN, index)
                 index += len(do_tokens)
                 self.statements.append(DoStatement(do_tokens))
             elif curr == RETURN_TOKEN:
-                return_tokens = TokenParser.getTokensBetween(tokens, RETURN_TOKEN, CURLY_KET_TOKEN, index)
+                return_tokens = parser.token_parser(tokens, RETURN_TOKEN, CURLY_KET_TOKEN, index)
                 index += len(return_tokens)
                 self.statements.append(ReturnStatement(return_tokens))
     
@@ -55,26 +58,25 @@ class Statements:
 
 class LetStatement(Statement):
     def __init__(self, tokens: list[Token]):
-        parsed = []
-        parsed.extend(tokens[:2])
+        parsed: list = tokens[:2]
         index = 2
         if tokens[2] == SQUARE_KET_TOKEN:
             parsed.append(SQUARE_BRA_TOKEN)
-            expression_tokens = TokenParser.getTokensBetween(tokens, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN, 2)
+            expression_tokens = self.token_parser(tokens, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN, 2)
             index += len(expression_tokens)
             index_expression = Expression(expression_tokens[1:-1])
             parsed.append(index_expression)
             parsed.append(SQUARE_KET_TOKEN)
         parsed.append(EQ_TOKEN)
-        expression_tokens = TokenParser.getTokensBetween(tokens, EQ_TOKEN, SEMICOLON_TOKEN, index)
+        expression_tokens = self.token_parser(tokens, EQ_TOKEN, SEMICOLON_TOKEN, index)
         parsed.append(Expression(expression_tokens[1:-1]))
         parsed.append(SEMICOLON_TOKEN)
-        super().__init__(parsed)
+        super().__init__("letStatement",parsed)
             
 class IfStatement(Statement):
     def __init__(self, if_tokens: list[Token], else_tokens_lists: list[list[Token]] = []):
         parsed: list = [IF_TOKEN, BRA_TOKEN]
-        expression_tokens = TokenParser.getTokensBetween(if_tokens, BRA_TOKEN, KET_TOKEN, 1)
+        expression_tokens = self.token_parser(if_tokens, BRA_TOKEN, KET_TOKEN, 1)
         parsed.append(Expression(expression_tokens[1:-1]))
         parsed.append(KET_TOKEN)
         index = len(expression_tokens) + 1
@@ -92,11 +94,11 @@ class WhileStatement(Statement):
     def __init__(self, tokens: list[Token]):
         parsed = []
         parsed.append(tokens[0])
-        expression_tokens = TokenParser.getTokensBetween(tokens, BRA_TOKEN, KET_TOKEN, 1)
+        expression_tokens = self.token_parser(tokens, BRA_TOKEN, KET_TOKEN, 1)
         parsed.append(BRA_TOKEN)
         parsed.append(Expression(expression_tokens[1:-1]))
         parsed.append(KET_TOKEN)
-        statements_tokens =  TokenParser.getTokensBetween(tokens, CURLY_BRA_TOKEN, CURLY_KET_TOKEN, len(expression_tokens)+1)
+        statements_tokens =  self.token_parser(tokens, CURLY_BRA_TOKEN, CURLY_KET_TOKEN, len(expression_tokens)+1)
         parsed.append(CURLY_BRA_TOKEN)
         parsed.append(Statements(statements_tokens[1:-1]))
         parsed.append(CURLY_KET_TOKEN)
@@ -104,6 +106,7 @@ class WhileStatement(Statement):
 
 class DoStatement(Statement):
     def __init__(self, tokens: list[Token]):
+        from Class import parseSubroutineCall
         parsed = []
         parsed.append(DO_TOKEN)
         parsed.append(parseSubroutineCall(tokens[1:-1]))
