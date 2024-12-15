@@ -33,9 +33,9 @@ class Analyzer:
 
     def write_output(self):
         """Writes the binary instructions to the output file."""
-        token_tree = self.parser.OutputString()
+        output_str = self.parser.OutputString()
         with open(self.output_file, 'w') as file:
-            file.write(token_tree)
+            file.write(output_str)
     def write_output_tokens(self):
         """Writes the binary instructions to the output file."""
         with open(self.output_file.replace(".xml", "_tokens.xml"), 'w') as file:

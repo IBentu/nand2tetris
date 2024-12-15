@@ -1,5 +1,3 @@
-
-
 LEXICAL_TYPE_KEYWORD = "keyword"
 LEXICAL_TYPE_SYMBOL = "symbol"
 LEXICAL_TYPE_INTEGER_CONSTANT = "integerConstant"
@@ -75,8 +73,22 @@ class Token:
 
     def __eq__(self, other):
         return self.type == other.type and self.token == other.token
-        
-        
-        
+     
+LET_TOKEN = Token("let")
+IF_TOKEN = Token("if")
+ELSE_TOKEN = Token("else")
+WHILE_TOKEN = Token("while")
+DO_TOKEN = Token("do")
+RETURN_TOKEN = Token("return")
+VAR_TOKEN = Token("var")
+COMMA_TOKEN = Token(",")
+SEMICOLON_TOKEN = Token(";")
+BRA_TOKEN = Token("(")
+KET_TOKEN = Token(")")
+SQUARE_BRA_TOKEN = Token("[")
+SQUARE_KET_TOKEN = Token("]")
+CURLY_BRA_TOKEN = Token("{")
+CURLY_KET_TOKEN = Token("}")
+EQ_TOKEN = Token("=")
     
     

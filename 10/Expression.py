@@ -1,41 +1,39 @@
-from Token import Token
+from Token import Token, LEXICAL_TYPE_SYMBOL, COMMA_TOKEN
 from Term import Term
-from typing import Union
-
-TOKEN_CLASS = type(Token(".")).__name__
 
 class Expression:
-    def __init__(self, term: Term, opTerms: list[Union[Term, Token]]):
-        if len(opTerms) % 2 != 0:
-            raise ValueError("expressions should have one less op than the number of terms")
-        self.tokens = [term]+opTerms;
+    def __init__(self, tokens: list[Token]):
+        self.parsed_tokens = []
+        term_tokens = []
+        for t in tokens:
+            if t.type != LEXICAL_TYPE_SYMBOL:
+                term_tokens.append(t)
+            else:
+                self.parsed_tokens.append(Term(term_tokens))
+                term_tokens = []
+                self.parsed_tokens.append(t)
+        self.parsed_tokens.append(Term(term_tokens))
 
     def OutputString(self) -> str:
-        op = False
-        token_strings = []
-        for t in self.tokens:
-             if op and type(t).__name__ == TOKEN_CLASS:
-                 raise ValueError("invalid type in expression")
-             token_strings.append(t.OutputString())
-             op = not op
-        return f"<expression>\n  {"\n  ".join(token_strings)}\n</expression>"
+        return f"<expression>\n  {"\n  ".join([t.OutputString() for t in self.parsed_tokens])}\n</expression>"
 
 class ExpressionList:
-    def __init__(self, expression: Expression, more: list[Union[Token, Expression]]):
-        if expression is None:
-            self.expressions = []
+    def __init__(self, tokens: list[Token]): 
+        self.expressions = []
+        if not len(tokens):
             return
-        if len(more) % 2 != 0:
-            raise ValueError("expressionLists should have one less comma than the number of expressions or empty")
-        self.expressions = [expression] + more
+        index = 0
+        expression_tokens = []
+        while index < len(tokens):
+            curr = tokens[index]
+            if curr == COMMA_TOKEN:
+                self.expressions.append(Expression(expression_tokens))
+                expression_tokens = []
+            else:
+                expression_tokens.append(curr)
+        self.expressions.append(Expression(expression_tokens))
     
-    def OutputString(self):
-        comma = False
-        token_strings = []
+    def OutputString(self) -> str:
         if not len(self.expressions):
             return "<expressionList>\n</expressionList>"
-        for t in self.expressions:
-            if comma and type(t).__name__ == TOKEN_CLASS:
-                raise ValueError("invalid type in expressionList")
-            token_strings.append(t.OutputString())
-        return f"<expressionList>\n  {"\n  ".join(token_strings)}\n</expressionList>"
+        return f"<expressionList>\n  {"\n  ".join([e.OutputString() for e in self.expressions])}\n</expressionList>"
