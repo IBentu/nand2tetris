@@ -14,11 +14,13 @@ class Statement:
         return TokenParser.getTokensBetween(tokens, bra, ket, start_from)
     
     def OutputString(self) -> str:
-        return f"<{self.name}>\n  {"\n  ".join([t.OutputString() for t in self.tokens])}\n</{self.name}>"
+        return f"<{self.name}>\n{"\n".join([t.OutputString() for t in self.tokens])}\n</{self.name}>"
     
 class Statements:
     def __init__(self, tokens: list[Token]):
         self.statements: list[Statement] = []
+        if not len(tokens):
+            return
         parser = Statement("", None)
         index = 0
         while index < len(tokens):
@@ -47,20 +49,20 @@ class Statements:
                 index += len(do_tokens)
                 self.statements.append(DoStatement(do_tokens))
             elif curr == RETURN_TOKEN:
-                return_tokens = parser.token_parser(tokens, RETURN_TOKEN, CURLY_KET_TOKEN, index)
+                return_tokens = parser.token_parser(tokens, RETURN_TOKEN, SEMICOLON_TOKEN, index)
                 index += len(return_tokens)
                 self.statements.append(ReturnStatement(return_tokens))
     
     def OutputString(self) -> str:
         if len(self.statements):
-            return f"<statements>\n  {"\n  ".join([s.OutputString() for s in self.statements])}\n</statements>"
+            return f"<statements>\n{"\n".join([s.OutputString() for s in self.statements])}\n</statements>"
         return "<statements>\n</statements>"
 
 class LetStatement(Statement):
     def __init__(self, tokens: list[Token]):
         parsed: list = tokens[:2]
         index = 2
-        if tokens[2] == SQUARE_KET_TOKEN:
+        if tokens[2] == SQUARE_BRA_TOKEN:
             parsed.append(SQUARE_BRA_TOKEN)
             expression_tokens = self.token_parser(tokens, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN, 2)
             index += len(expression_tokens)
@@ -71,7 +73,7 @@ class LetStatement(Statement):
         expression_tokens = self.token_parser(tokens, EQ_TOKEN, SEMICOLON_TOKEN, index)
         parsed.append(Expression(expression_tokens[1:-1]))
         parsed.append(SEMICOLON_TOKEN)
-        super().__init__("letStatement",parsed)
+        super().__init__("letStatement", parsed)
             
 class IfStatement(Statement):
     def __init__(self, if_tokens: list[Token], else_tokens_lists: list[list[Token]] = []):
@@ -109,7 +111,7 @@ class DoStatement(Statement):
         from Class import parseSubroutineCall
         parsed = []
         parsed.append(DO_TOKEN)
-        parsed.append(parseSubroutineCall(tokens[1:-1]))
+        parsed.extend(parseSubroutineCall(tokens[1:-1]))
         parsed.append(SEMICOLON_TOKEN)
         super().__init__("doStatement", parsed)
 

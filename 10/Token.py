@@ -14,7 +14,7 @@ class InvalidStringException(Exception):
     def __init__(self, *args):
         super().__init__(*args)
 
-        
+
 class Token:
     keywords = ["class", "constructor", "function", "method", 
                 "field", "static", "var", "int", "char", 
@@ -25,7 +25,6 @@ class Token:
     symbols = ["{", "}", "(", ")", "[", "]", ".", ",", ";", 
                "+", "-", "*", "/", "&", '|', "<", ">", "=", 
                "~", "^", "#"]
-    ops = ["+", "-", "*", "/", "&", "|", "<", ">", "="]
     
     def __init__(self, token):
         self.type, self.token = Token.classify(token)

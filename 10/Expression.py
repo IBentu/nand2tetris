@@ -1,13 +1,14 @@
 from Token import Token, COMMA_TOKEN
 from Term import Term
 
+OPS = ["+", "-", "*", "/", "&amp;", "|", "&lt;", "&gt;", "="]
+
 class Expression:
     def __init__(self, tokens: list[Token]):
-        print(tokens)
         self.parsed_tokens = []
         term_tokens = []
         for t in tokens:
-            if t.token not in Token.ops:
+            if t.token not in OPS:
                 term_tokens.append(t)
             else:
                 self.parsed_tokens.append(Term(term_tokens))
@@ -16,7 +17,7 @@ class Expression:
         self.parsed_tokens.append(Term(term_tokens))
 
     def OutputString(self) -> str:
-        return f"<expression>\n  {"\n  ".join([t.OutputString() for t in self.parsed_tokens])}\n</expression>"
+        return f"<expression>\n{"\n".join([t.OutputString() for t in self.parsed_tokens])}\n</expression>"
 
 class ExpressionList:
     def __init__(self, tokens: list[Token]): 
@@ -35,4 +36,4 @@ class ExpressionList:
     def OutputString(self) -> str:
         if not len(self.expressions):
             return "<expressionList>\n</expressionList>"
-        return f"<expressionList>\n  {"\n  ".join([e.OutputString() for e in self.expressions])}\n</expressionList>"
+        return f"<expressionList>\n{"\n".join([e.OutputString() for e in self.expressions])}\n</expressionList>"

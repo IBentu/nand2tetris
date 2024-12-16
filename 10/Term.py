@@ -14,13 +14,13 @@ class Term:
         elif tokens[1] == SQUARE_BRA_TOKEN: # varName[expression]
             self.tokens.append(tokens[0])
             self.tokens.append(SQUARE_BRA_TOKEN)
-            self.tokens.append(Expression(tokens[1:-1]))
+            self.tokens.append(Expression(tokens[2:-1]))
             self.tokens.append(SQUARE_KET_TOKEN)
         elif tokens[-1] == KET_TOKEN: # subroutineCall
             self.tokens = parseSubroutineCall(tokens)
         
     def OutputString(self) -> str:
-        return f"<term>\n  {"\n  ".join([t.OutputString() for t in self.tokens])}\n</term>"
+        return f"<term>\n{"\n".join([t.OutputString() for t in self.tokens])}\n</term>"
 
     def __repr__(self):
         return self.OutputString()

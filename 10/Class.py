@@ -1,4 +1,4 @@
-from Token import Token, BRA_TOKEN, KET_TOKEN, SEMICOLON_TOKEN, VAR_TOKEN
+from Token import Token, BRA_TOKEN, KET_TOKEN, SEMICOLON_TOKEN, VAR_TOKEN, CURLY_BRA_TOKEN, CURLY_KET_TOKEN
 from Expression import ExpressionList
 from Statement import Statements
 
@@ -7,7 +7,7 @@ class ClassVarDec:
         self.tokens = tokens
     
     def OutputString(self) -> str:
-        return f"<classVarDec>\n  {"\n  ".join([t.OutputString() for t in self.tokens])}\n</classVarDec>"
+        return f"<classVarDec>\n{"\n".join([t.OutputString() for t in self.tokens])}\n</classVarDec>"
     
     @staticmethod
     def isVarDec(token: Token) -> bool:
@@ -18,7 +18,7 @@ class ParameterList:
         self.tokens = tokens    
     def OutputString(self) -> str:
         if len(self.tokens):
-            return f"<parameterList>\n  {"\n  ".join([s.OutputString() for s in self.statements])}\n</parameterList>"
+            return f"<parameterList>\n{"\n".join([s.OutputString() for s in self.statements])}\n</parameterList>"
         return "<parameterList>\n</parameterList>"
 
 class SubroutineBody:
@@ -34,8 +34,8 @@ class SubroutineBody:
 
     def OutputString(self) -> str:
         if len(self.varDecs):
-            return f"<subroutineBody>\n{"  \n".join([v.OutputString() for v in self.varDecs])}\n  {self.statements.OutputString}\n</subroutineBody>"
-        return f"<subroutineBody>\n  {self.statements.OutputString}\n</subroutineBody>"
+            return f"<subroutineBody>\n{CURLY_BRA_TOKEN.OutputString()}\n{"\n".join([v.OutputString() for v in self.varDecs])}\n{self.statements.OutputString()}\n{CURLY_KET_TOKEN.OutputString()}\n</subroutineBody>"
+        return f"<subroutineBody>\n{CURLY_BRA_TOKEN.OutputString()}\n{self.statements.OutputString()}\n{CURLY_KET_TOKEN.OutputString()}\n</subroutineBody>"
 
 class SubroutineDec:
     def __init__(self, header_tokens: list[Token], parameters: ParameterList, body: SubroutineBody):
@@ -44,7 +44,7 @@ class SubroutineDec:
         self.body = body
         
     def OutputString(self) -> str:
-        return f"<subroutineDec>\n  {"\n  ".join([t.OutputString() for t in self.header_tokens])}  \n{Token("(").OutputString()}  \n{self.params.OutputString()}  \n{Token(")").OutputString()}  \n{self.body.OutputString()}\n</subroutineDec>"
+        return f"<subroutineDec>\n{"\n".join([t.OutputString() for t in self.header_tokens])}\n{BRA_TOKEN.OutputString()}\n{self.params.OutputString()}\n{KET_TOKEN.OutputString()}\n{self.body.OutputString()}\n</subroutineDec>"
 
 
 class VarDec:
@@ -52,7 +52,7 @@ class VarDec:
         self.tokens = tokens
 
     def OutputString(self) -> str:
-        return f"<varDec>\n{"\n  ".join([t.Outputstring() for t in self.tokens])}\n</varDec>"
+        return f"<varDec>\n{"\n".join([t.OutputString() for t in self.tokens])}\n</varDec>"
     
     @staticmethod
     def isVarDec(token: Token) -> bool:

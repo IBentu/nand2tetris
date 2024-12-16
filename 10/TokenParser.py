@@ -43,7 +43,7 @@ class TokenParser:
     
     
     def OutputString(self) -> str:
-        return f"<class>\n  {"\n  ".join([t.OutputString() for t in self.token_tree])}\n</class>"
+        return f"<class>\n{"\n".join([t.OutputString() for t in self.token_tree])}\n</class>"
     
     
     @staticmethod

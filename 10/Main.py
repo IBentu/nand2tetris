@@ -56,7 +56,7 @@ if __name__ == '__main__':
     writer = None
     if os.path.isdir(input_path):
         name = os.path.basename(input_path)
-        analyzers = []
+        analyzers: list[Analyzer] = []
         print(f"Starting analyzing of project: {name}")
         for filename in os.listdir(input_path):
             if not filename.endswith(".jack"):
