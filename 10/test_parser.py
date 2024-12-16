@@ -53,6 +53,7 @@ LET = [t("let"), t("a"), t("="), t("1"), t(";")]
 LET_WITH_EXP = [t("let"), *VAR_WITH_EXP, t("="), t("0"), t(";")]
 IF = [t("if"), t("("), *EXPRESSION_TERM, t(")"), t("{"), *LET, t("}")]
 ELSE = [t("else"), t("{"), *LET_WITH_EXP, t("}")]
+DO = [t("do"), *FUNC_CALL, t(";")]
 
 def test_Statements():
     assert Statements([]).statements == []
@@ -65,5 +66,5 @@ def test_Statements():
     assert IfStatement(IF, [ELSE, ELSE]).tokens == [t("if"), t("("), Expression(EXPRESSION_TERM),  t(")"), t("{"), Statements(LET), t("}"), t("else"), t("{"), Statements(LET_WITH_EXP), t("}"), t("else"), t("{"), Statements(LET_WITH_EXP), t("}")]
     assert Statements(IF).statements == [IfStatement(IF)]
     assert Statements([*IF, *ELSE, *ELSE]).statements == [IfStatement(IF, [ELSE, ELSE])]
-    # TODO: test DoStatement WhileStatement
-    assert False
+    assert DoStatement(DO).tokens == [t("do"), *(FUNC_CALL[:4]), ExpressionList([]), FUNC_CALL[4], t(";")]
+    # TODO: test WhileStatement
