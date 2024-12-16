@@ -67,4 +67,5 @@ def test_Statements():
     assert Statements(IF).statements == [IfStatement(IF)]
     assert Statements([*IF, *ELSE, *ELSE]).statements == [IfStatement(IF, [ELSE, ELSE])]
     assert DoStatement(DO).tokens == [t("do"), *(FUNC_CALL[:4]), ExpressionList([]), FUNC_CALL[4], t(";")]
+    assert Statements([*LET, *LET, *DO, *IF, *ELSE, *ELSE, *DO]).statements == [LetStatement(LET), LetStatement(LET), DoStatement(DO), IfStatement(IF, [ELSE, ELSE]), DoStatement(DO)]
     # TODO: test WhileStatement
