@@ -16,6 +16,15 @@ class Statement:
     def OutputString(self) -> str:
         return f"<{self.name}>\n{"\n".join([t.OutputString() for t in self.tokens])}\n</{self.name}>"
     
+    def __repr__(self):
+        return f"{self.name}{self.tokens}"
+    
+    def __eq__(self, other):
+        try:
+            return self.name == other.name and self.tokens == other.tokens
+        except:
+            return False
+    
 class Statements:
     def __init__(self, tokens: list[Token]):
         self.statements: list[Statement] = []
@@ -39,7 +48,7 @@ class Statements:
                     index += len(else_tokens)
                     else_tokens_lists.append(else_tokens)
                     curr = tokens[index]
-                self.statements.append(IfStatement(if_tokens, else_tokens))
+                self.statements.append(IfStatement(if_tokens, else_tokens_lists))
             elif curr == WHILE_TOKEN:
                 while_tokens = parser.token_parser(tokens, WHILE_TOKEN, CURLY_KET_TOKEN, index)
                 index += len(while_tokens)
@@ -57,6 +66,15 @@ class Statements:
         if len(self.statements):
             return f"<statements>\n{"\n".join([s.OutputString() for s in self.statements])}\n</statements>"
         return "<statements>\n</statements>"
+    
+    def __eq__(self, other):
+        try:
+            return self.statements == other.statements
+        except:
+            return False
+    
+    def __repr__(self):
+        return f"statements{self.statements}"
 
 class LetStatement(Statement):
     def __init__(self, tokens: list[Token]):

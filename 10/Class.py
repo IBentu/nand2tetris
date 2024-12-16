@@ -18,7 +18,7 @@ class ParameterList:
         self.tokens = tokens    
     def OutputString(self) -> str:
         if len(self.tokens):
-            return f"<parameterList>\n{"\n".join([s.OutputString() for s in self.statements])}\n</parameterList>"
+            return f"<parameterList>\n{"\n".join([t.OutputString() for t in self.tokens])}\n</parameterList>"
         return "<parameterList>\n</parameterList>"
 
 class SubroutineBody:

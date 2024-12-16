@@ -59,7 +59,8 @@ class Token:
         return f"<{self.type}> {self.token} </{self.type}>"
     
     def __repr__(self):
-        return str(self.token)
+        return f"'{self.token}'"
+
     
     # converts symbols: ">" = "&gt", "<" = "&lt", "&" = "&amp"
     def convert_symbol(symbol: str) -> str:
@@ -72,7 +73,10 @@ class Token:
         return symbol
 
     def __eq__(self, other):
-        return self.type == other.type and self.token == other.token
+        try:
+            return self.type == other.type and self.token == other.token
+        except:
+            return False
      
 LET_TOKEN = Token("let")
 IF_TOKEN = Token("if")

@@ -51,9 +51,8 @@ class TokenParser:
         # returns all tokens between bra and ket (including the bra and the ket)
         index = start_from
         if tokens[index] != bra:
-            raise IndexError(f"current token isn't the provided bra: provided='{bra}', current='{tokens[index]}'")
+            raise IndexError(f"current token isn't the provided bra: provided={bra}, current={tokens[index]}")
         index += 1
-        ret = [bra]
         brakets_stack = [bra]
         while len(brakets_stack):
             curr = tokens[index]
@@ -61,6 +60,5 @@ class TokenParser:
                 brakets_stack.append(curr)
             elif curr == ket:
                 brakets_stack.pop()
-            ret.append(curr)
             index += 1
-        return ret
+        return tokens[start_from:index]

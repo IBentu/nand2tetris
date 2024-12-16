@@ -1,11 +1,13 @@
 from Token import Token, LEXICAL_TYPE_SYMBOL, BRA_TOKEN, KET_TOKEN, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN
 
+UNARY_OPS = ["-", "~", "#", "^"]
+
 class Term:
     def __init__(self, tokens: list[Token]):
         from Class import parseSubroutineCall
         from Expression import Expression
         self.tokens = []
-        if len(tokens) == 1 or tokens[0].type == LEXICAL_TYPE_SYMBOL:
+        if len(tokens) == 1 or tokens[0].token in UNARY_OPS:
             self.tokens = tokens
         elif tokens[0] == BRA_TOKEN: # (expression)
             self.tokens.append(BRA_TOKEN)
@@ -23,4 +25,10 @@ class Term:
         return f"<term>\n{"\n".join([t.OutputString() for t in self.tokens])}\n</term>"
 
     def __repr__(self):
-        return self.OutputString()
+        return f"term{self.tokens}"
+
+    def __eq__(self, other):
+        try:
+            return self.tokens == other.tokens
+        except:
+            return False

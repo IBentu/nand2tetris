@@ -1,14 +1,21 @@
-from Token import Token, COMMA_TOKEN
+from Token import Token, COMMA_TOKEN, BRA_TOKEN, KET_TOKEN, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN
 from Term import Term
 
 OPS = ["+", "-", "*", "/", "&amp;", "|", "&lt;", "&gt;", "="]
 
 class Expression:
     def __init__(self, tokens: list[Token]):
-        self.parsed_tokens = []
+        self.parsed_tokens: list[Token] = []
         term_tokens = []
+        bracket_stack = 0
         for t in tokens:
-            if t.token not in OPS:
+            if t == BRA_TOKEN or t == SQUARE_BRA_TOKEN:
+                bracket_stack += 1
+                term_tokens.append(t)
+            elif t == KET_TOKEN or t == SQUARE_KET_TOKEN:
+                bracket_stack -= 1
+                term_tokens.append(t)
+            elif bracket_stack or t.token not in OPS:
                 term_tokens.append(t)
             else:
                 self.parsed_tokens.append(Term(term_tokens))
@@ -19,21 +26,41 @@ class Expression:
     def OutputString(self) -> str:
         return f"<expression>\n{"\n".join([t.OutputString() for t in self.parsed_tokens])}\n</expression>"
 
+    def __eq__(self, other):
+        try:
+            return self.parsed_tokens == other.parsed_tokens
+        except:
+            return False
+    
+    def __repr__(self):
+        return f"expression{self.parsed_tokens}"
+
+
 class ExpressionList:
     def __init__(self, tokens: list[Token]): 
-        self.expressions = []
+        self.tokens = []
         if not len(tokens):
             return
         expression_tokens = []
         for curr in tokens:
             if curr == COMMA_TOKEN:
-                self.expressions.append(Expression(expression_tokens))
+                self.tokens.append(Expression(expression_tokens))
+                self.tokens.append(curr)
                 expression_tokens = []
             else:
                 expression_tokens.append(curr)
-        self.expressions.append(Expression(expression_tokens))
+        self.tokens.append(Expression(expression_tokens))
     
     def OutputString(self) -> str:
-        if not len(self.expressions):
+        if not len(self.tokens):
             return "<expressionList>\n</expressionList>"
-        return f"<expressionList>\n{"\n".join([e.OutputString() for e in self.expressions])}\n</expressionList>"
+        return f"<expressionList>\n{"\n".join([e.OutputString() for e in self.tokens])}\n</expressionList>"
+    
+    def __eq__(self, other):
+        try:
+            return self.tokens == other.tokens
+        except:
+            return False
+    
+    def __repr__(self):
+        return f"expressionList{self.tokens}"
