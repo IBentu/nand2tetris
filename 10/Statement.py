@@ -41,12 +41,17 @@ class Statements:
             elif curr == IF_TOKEN:
                 if_tokens = parser.token_parser(tokens, IF_TOKEN, CURLY_KET_TOKEN, index)
                 index += len(if_tokens)
+                if index >= len(tokens):
+                    self.statements.append(IfStatement(if_tokens))
+                    continue
                 else_tokens_lists = []
                 curr = tokens[index]
                 while curr == ELSE_TOKEN:
                     else_tokens = parser.token_parser(tokens, curr, CURLY_KET_TOKEN, index)
                     index += len(else_tokens)
                     else_tokens_lists.append(else_tokens)
+                    if index >= len(tokens):
+                        break
                     curr = tokens[index]
                 self.statements.append(IfStatement(if_tokens, else_tokens_lists))
             elif curr == WHILE_TOKEN:

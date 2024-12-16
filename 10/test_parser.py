@@ -1,18 +1,22 @@
 from TokenParser import TokenParser
 from Token import Token as t
 from Expression import Expression, ExpressionList
-from Statement import LetStatement, DoStatement, WhileStatement, IfStatement, ReturnStatement, Statements
+from Statement import LetStatement, IfStatement, ReturnStatement, Statements, DoStatement, WhileStatement
 from Term import Term
 
-def convert2tokens(strings: list[str]) -> list[t]:
+def convert2tokens(string: str) -> list[t]:
+    strings = string.split(" ")
     return [t(s) for s in strings]
 
 
-BRACKETS = convert2tokens(["[", "(", "{", "}", ")", "]"])
+BRACKETS = convert2tokens("[ ( { [ ( { } ) ] } ) ]")
 def test_Parser():
     parse = TokenParser.getTokensBetween
     assert parse(BRACKETS, t("("), t(")"), 1) == BRACKETS[1:-1]
-    assert parse([t("a"), *BRACKETS, t("}")], t("a"), t("}")) == [t("a"), *BRACKETS, t("}")]
+    assert parse(BRACKETS, t("["), t("]"), 3) == BRACKETS[3:-3]
+    assert parse([t("a"), *BRACKETS], t("a"), t("}")) == [t("a")] + BRACKETS[:10]
+    assert parse(IF, t("if"), t("}")) == IF
+    assert parse(ELSE, t("else"), t("}")) == ELSE
 
 FUNC_CALL = [t("Test"), t("."), t("foo"), t("("), t(")")]
 EXPRESSION_TERM = [t("("), t("#"), t("x"), t(")")]
@@ -54,6 +58,12 @@ def test_Statements():
     assert Statements([]).statements == []
     assert LetStatement(LET).tokens == [t("let"), t("a"), t("="), Expression([t("1")]), t(";")]
     assert LetStatement(LET_WITH_EXP).tokens == [t("let"), t("a"), t("["), Expression([t("i")]), t("]"), t("="), Expression([t("0")]), t(";")]
+    assert ReturnStatement(convert2tokens("return ;")).tokens == convert2tokens("return ;")
+    assert ReturnStatement(convert2tokens("return ( a + b ) ;")).tokens == [t("return"), Expression(convert2tokens("( a + b )")) ,t(";")]
     assert IfStatement(IF).tokens == [t("if"), t("("), Expression(EXPRESSION_TERM),  t(")"), t("{"), Statements(LET), t("}")]
     assert IfStatement(IF, [ELSE]).tokens == [t("if"), t("("), Expression(EXPRESSION_TERM),  t(")"), t("{"), Statements(LET), t("}"), t("else"), t("{"), Statements(LET_WITH_EXP), t("}")]
+    assert IfStatement(IF, [ELSE, ELSE]).tokens == [t("if"), t("("), Expression(EXPRESSION_TERM),  t(")"), t("{"), Statements(LET), t("}"), t("else"), t("{"), Statements(LET_WITH_EXP), t("}"), t("else"), t("{"), Statements(LET_WITH_EXP), t("}")]
+    assert Statements(IF).statements == [IfStatement(IF)]
     assert Statements([*IF, *ELSE, *ELSE]).statements == [IfStatement(IF, [ELSE, ELSE])]
+    # TODO: test DoStatement WhileStatement
+    assert False
