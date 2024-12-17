@@ -4,6 +4,8 @@ LEXICAL_TYPE_INTEGER_CONSTANT = "integerConstant"
 LEXICAL_TYPE_STRING_CONSTANT = "stringConstant"
 LEXICAL_TYPE_IDENTIFIER = "identifier"
 
+LEXICAL_TYPES = [LEXICAL_TYPE_STRING_CONSTANT, LEXICAL_TYPE_IDENTIFIER, LEXICAL_TYPE_INTEGER_CONSTANT, LEXICAL_TYPE_SYMBOL, LEXICAL_TYPE_KEYWORD]
+LEXICAL_TYPES_W_ARROW = [f"<{l}>" for l in LEXICAL_TYPES]
 class InvalidTokenException(Exception):
     def __init__(self, *args):
         super().__init__(*args)

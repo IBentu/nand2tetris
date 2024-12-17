@@ -1,4 +1,4 @@
-from Token import Token, LEXICAL_TYPE_IDENTIFIER, BRA_TOKEN, KET_TOKEN, CURLY_BRA_TOKEN, CURLY_KET_TOKEN, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN, SEMICOLON_TOKEN
+from Token import Token, LEXICAL_TYPES_W_ARROW, LEXICAL_TYPE_IDENTIFIER, BRA_TOKEN, KET_TOKEN, CURLY_BRA_TOKEN, CURLY_KET_TOKEN, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN, SEMICOLON_TOKEN
 from Class import ClassVarDec, SubroutineDec, ParameterList, SubroutineBody
 
 KET2BRA = {
@@ -55,7 +55,23 @@ class TokenParser:
     
     
     def OutputString(self) -> str:
-        return f"<class>\n{"\n".join([t.OutputString() for t in self.token_tree])}\n</class>"
+        strings: str = [t.OutputString() for t in self.token_tree]
+        strings = ("\n".join(strings)).split("\n")
+        whitespace = 1
+        for i, s in enumerate(strings):
+            if s.startswith("</"):
+                whitespace -= 1
+                strings[i] = f"{"  "*whitespace}{s}"
+                continue
+            lexical_type = False
+            for t in LEXICAL_TYPES_W_ARROW:
+                if s.startswith(t):
+                    lexical_type = True
+                    break
+            strings[i] = f"{"  "*whitespace}{s}"
+            if not lexical_type:
+                whitespace += 1
+        return f"<class>\n{"\n".join(strings)}\n</class>"
     
     
     @staticmethod
