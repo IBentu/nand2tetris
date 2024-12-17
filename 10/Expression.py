@@ -1,5 +1,5 @@
 from Token import Token, COMMA_TOKEN, BRA_TOKEN, KET_TOKEN, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN
-from Term import Term
+from Term import Term, UNARY_OPS
 
 OPS = ["+", "-", "*", "/", "&amp;", "|", "&lt;", "&gt;", "="]
 
@@ -15,7 +15,7 @@ class Expression:
             elif t == KET_TOKEN or t == SQUARE_KET_TOKEN:
                 bracket_stack -= 1
                 term_tokens.append(t)
-            elif bracket_stack or t.token not in OPS:
+            elif bracket_stack or (t.token not in OPS or t.token in UNARY_OPS):
                 term_tokens.append(t)
             else:
                 self.parsed_tokens.append(Term(term_tokens))
