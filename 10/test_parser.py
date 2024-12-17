@@ -57,6 +57,7 @@ def test_ExpressionList():
 
 LET = [t("let"), t("a"), t("="), t("1"), t(";")]
 LET2 = convert2tokens("let i = i * ( - j ) ;")
+LET3 = convert2tokens("let size = size + 2 ;")
 LET_WITH_EXP = [t("let"), *VAR_WITH_EXP, t("="), t("0"), t(";")]
 IF = [t("if"), t("("), *EXPRESSION_TERM, t(")"), t("{"), *LET, t("}")]
 ELSE = [t("else"), t("{"), *LET_WITH_EXP, t("}")]
@@ -65,8 +66,9 @@ IF_ELSE_IN_IF = convert2tokens("if ( a ) { if ( b ) { let a = false ; } else { l
 IF_ELSE = convert2tokens("if ( false ) { let s = \"string_constant\" ; let s = null ; let a [ 1 ] = a [ 2 ] ; } else { let i = i * ( - j ) ; let j = j / ( - 2 ) ; let i = i | j ; }")
 def test_Statements():
     assert Statements([]).statements == []
-    assert LetStatement(LET).tokens == [t("let"), t("a"), t("="), Expression([t("1")]), t(";")]
+    assert LetStatement(LET).tokens == [*(LET[:3]), Expression(LET[3:-1]), LET[-1]]
     assert LetStatement(LET2).tokens == [*(LET2[:3]), Expression(LET2[3:-1]), LET2[-1]]
+    assert LetStatement(LET3).tokens == [*(LET3[:3]), Expression(LET3[3:-1]), LET3[-1]]
     assert LetStatement(LET_WITH_EXP).tokens == [t("let"), t("a"), t("["), Expression([t("i")]), t("]"), t("="), Expression([t("0")]), t(";")]
     assert ReturnStatement(convert2tokens("return ;")).tokens == convert2tokens("return ;")
     assert ReturnStatement(convert2tokens("return ( a + b ) ;")).tokens == [t("return"), Expression(convert2tokens("( a + b )")) ,t(";")]
