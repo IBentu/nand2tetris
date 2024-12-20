@@ -46,7 +46,7 @@ class Token:
             pass
         if token.startswith("\"") and token.endswith("\""):
             token = token[1:-1]
-            if not("\n" in token or "\"" in token):
+            if not('\n' in token or "\"" in token):
                 return LEXICAL_TYPE_STRING_CONSTANT, token
             raise InvalidStringException("newline or \" in string literal")
         if token[0].isdigit():

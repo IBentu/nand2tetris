@@ -17,19 +17,7 @@ class Analyzer:
         self.name = path[0]
         self.output_file = input_file.replace('.jack', '.xml')
         self.tokenizer = None
-        self.parser = None
-
-    
-    def clean_instructions(self):
-        if not self.asm_instructions:
-            raise Exception("no assembly code to clean!")
-        cleaned = []
-        self.asm_instructions = ("\n".join(self.asm_instructions)).split("\n")
-        for line in self.asm_instructions:
-            if line.startswith("//") or set(line).issubset(set(" /\n")):
-                continue
-            cleaned.append(line)
-        self.asm_instructions = cleaned        
+        self.parser = None        
 
     def write_output(self):
         """Writes the binary instructions to the output file."""
@@ -39,14 +27,15 @@ class Analyzer:
     def write_output_tokens(self):
         """Writes the binary instructions to the output file."""
         with open(self.output_file.replace(".xml", "_tokens.xml"), 'w') as file:
-            file.write(f"<tokens>\n  {"\n  ".join(self.tokenizer.tokenStrings)}\n</tokens>\n")
+            nl = '\n'
+            file.write(f"<tokens>{nl}  {(nl+'  ').join(self.tokenizer.tokenStrings)}{nl}</tokens>{nl}")
 
     def analyze(self):
         """Coordinates the jack Analyzing process."""
         self.tokenizer = Tokenizer(self.input_file)
         self.tokenizer.tokenize()
         self.parser = TokenParser(self.tokenizer.tokens)
-        self.parser.CompileClass()
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:

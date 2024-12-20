@@ -16,7 +16,8 @@ class Tokenizer:
             self.tokenStrings.append(t.OutputString())
             self.tokens.append(t)
         if len(self.errors):
-            print(f"Errors tokenizing:\n{"\n".join(self.errors)}")
+            nl = "\n"
+            print(f"Errors tokenizing:{nl}{nl.join(self.errors)}")
             exit(1)
     
     def nextToken(self) -> Token:
@@ -34,7 +35,7 @@ class Tokenizer:
             else:
                 if not len(char) or char in "	 ":
                     break
-                if char == "\n":
+                if char == '\n':
                     self.line += 1
                     break
                 if char in Token.symbols:
@@ -57,7 +58,7 @@ class Tokenizer:
             if not len(char):
                 self.infile.close()
                 return True
-            if char == "\n":
+            if char == '\n':
                 self.line += 1
                 continue
             if char =="\r":
@@ -67,14 +68,14 @@ class Tokenizer:
             if char == "/": # remove comments
                 next = self.readChar()
                 if next == "/": # single line
-                    while next != "\n":
+                    while next != '\n':
                         next = self.readChar()
                     self.line += 1
                     continue
                 if next == "*": # multi line
                     while True:
                         c = self.readChar()
-                        if c == "\n":
+                        if c == '\n':
                             self.line += 1
                         elif c == "*":
                             if self.readChar() == "/":

@@ -14,7 +14,8 @@ class Statement:
         return TokenParser.getTokensBetween(tokens, bra, ket, start_from)
     
     def OutputString(self) -> str:
-        return f"<{self.name}>\n{"\n".join([t.OutputString() for t in self.tokens])}\n</{self.name}>"
+        nl  = "\n"
+        return f"<{self.name}>{nl}{nl.join([t.OutputString() for t in self.tokens])}{nl}</{self.name}>"
     
     def __repr__(self):
         return f"{self.name}{self.tokens}"
@@ -69,7 +70,8 @@ class Statements:
     
     def OutputString(self) -> str:
         if len(self.statements):
-            return f"<statements>\n{"\n".join([s.OutputString() for s in self.statements])}\n</statements>"
+            nl = "\n"
+            return f"<statements>{nl}{nl.join([s.OutputString() for s in self.statements])}{nl}</statements>"
         return "<statements>\n</statements>"
     
     def __eq__(self, other):

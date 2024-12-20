@@ -15,7 +15,7 @@ class Expression:
             elif t == KET_TOKEN or t == SQUARE_KET_TOKEN:
                 bracket_stack -= 1
                 term_tokens.append(t)
-            elif bracket_stack or (t.token not in OPS or t.token in UNARY_OPS):
+            elif bracket_stack or (t.token not in OPS or (t.token in UNARY_OPS and not term_tokens)):
                 term_tokens.append(t)
             else:
                 self.parsed_tokens.append(Term(term_tokens))
@@ -24,7 +24,8 @@ class Expression:
         self.parsed_tokens.append(Term(term_tokens))
 
     def OutputString(self) -> str:
-        return f"<expression>\n{"\n".join([t.OutputString() for t in self.parsed_tokens])}\n</expression>"
+        nl = '\n'
+        return f"<expression>{nl}{nl.join([t.OutputString() for t in self.parsed_tokens])}{nl}</expression>"
 
     def __eq__(self, other):
         try:
@@ -54,7 +55,8 @@ class ExpressionList:
     def OutputString(self) -> str:
         if not len(self.tokens):
             return "<expressionList>\n</expressionList>"
-        return f"<expressionList>\n{"\n".join([e.OutputString() for e in self.tokens])}\n</expressionList>"
+        nl = '\n'
+        return f"<expressionList>{nl}{nl.join([e.OutputString() for e in self.tokens])}{nl}</expressionList>"
     
     def __eq__(self, other):
         try:

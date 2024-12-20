@@ -3,6 +3,7 @@ from Token import Token as t
 from Expression import Expression, ExpressionList
 from Statement import LetStatement, IfStatement, ReturnStatement, Statements, DoStatement, WhileStatement
 from Term import Term
+from Class import SubroutineBody, SubroutineDec, CompileClass, ParameterList
 
 def convert2tokens(string: str) -> list[t]:
     strings = string.split(" ")
@@ -39,6 +40,7 @@ def test_Term():
 MATH_PROB = [t("a"), t("+"), t("b"), t("/"),t("("), t("2"), t("*"), *FUNC_CALL, t(")")]
 EXP = convert2tokens("i * ( - j )")
 EXP2 = convert2tokens("- ( a - b ) * a [ ( a / - b ) ]")
+EXP3 = convert2tokens("size - 2")
 def test_Expression():
     assert Expression([t("#"), t("x")]).parsed_tokens == [Term([t("#"), t("x")])]
     assert Expression([t("a")]).parsed_tokens == [Term([t("a")])]
@@ -49,6 +51,7 @@ def test_Expression():
     assert Expression(EXPRESSION_TERM).parsed_tokens == [Term(EXPRESSION_TERM)]
     assert Expression(EXP).parsed_tokens == [Term([t("i")]), t("*"), Term(EXP[2:])]
     assert Expression(EXP2).parsed_tokens == [Term(EXP2[:6]), EXP2[6], Term(EXP2[7:])]
+    assert Expression(EXP3).parsed_tokens == [Term(EXP3[:1]), EXP3[1], Term(EXP3[2:])]
     
 def test_ExpressionList():
     assert ExpressionList([]).tokens == []
@@ -82,3 +85,14 @@ def test_Statements():
     assert Statements(IF_ELSE).statements[0] == IfStatement(IF_ELSE[:27], [IF_ELSE[27:]])
     assert Statements(IF_ELSE_IN_IF).statements[0] == IfStatement(IF_ELSE_IN_IF)
     # TODO: test WhileStatement
+
+BASIC_CLASS = convert2tokens("class Test { method void incSize ( ) { if ( ( ( y + size ) < 254 ) & ( ( x + size ) < 510 ) ) { do erase ( ) ; let size = size + 2 ; do draw ( ) ; } return ; } }")
+BASIC_CLASS2 = convert2tokens("class Test2 { method void decSize ( ) { if ( size > 2 ) { do erase ( ) ; let size = size - 2 ; do draw ( ) ; } return ; } }")
+def test_SubroutineBody():
+    body = SubroutineBody(BASIC_CLASS[8:-1])
+    assert body.varDecs == []
+    assert body.statements == Statements(BASIC_CLASS[9:-2])
+    body = SubroutineBody(BASIC_CLASS2[8:-1])
+    assert body.varDecs == []
+    assert body.statements == Statements(BASIC_CLASS2[9:-2])
+
