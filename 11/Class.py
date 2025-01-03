@@ -106,6 +106,9 @@ class SubroutineDec:
         self.params = parameters
         self.body = body
         
+    def getName(self) -> str:
+        return self.header_tokens[2].token
+
     def OutputString(self) -> str:
         nl = '\n'
         return f"<subroutineDec>{nl}{nl.join([t.OutputString() for t in self.header_tokens])}{nl}{BRA_TOKEN.OutputString()}{nl}{self.params.OutputString()}{nl}{KET_TOKEN.OutputString()}{nl}{self.body.OutputString()}{nl}</subroutineDec>"

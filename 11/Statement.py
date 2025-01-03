@@ -2,7 +2,7 @@ from Token import Token, LET_TOKEN, IF_TOKEN, ELSE_TOKEN, WHILE_TOKEN,\
                   DO_TOKEN, RETURN_TOKEN, SEMICOLON_TOKEN, BRA_TOKEN, \
                   KET_TOKEN, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN,\
                   CURLY_BRA_TOKEN, CURLY_KET_TOKEN, EQ_TOKEN
-from Expression import Expression
+from Expression import Expression, ExpressionList
 
 class Statement:
     def __init__(self, name, tokens):
@@ -139,6 +139,15 @@ class DoStatement(Statement):
         parsed.extend(parseSubroutineCall(tokens[1:-1]))
         parsed.append(SEMICOLON_TOKEN)
         super().__init__("doStatement", parsed)
+        
+    def getExpressionList(self) -> ExpressionList:
+        for t in self.tokens:
+            if type(t) is ExpressionList:
+                return t
+    
+    def getSubroutineName(self) -> str:
+        return "".join(map(lambda x: x.token, self.token_parser(self.tokens, DO_TOKEN, BRA_TOKEN)[1:-1]))
+        
 
 class ReturnStatement(Statement):
     def __init__(self, tokens: list[Token]):
@@ -147,3 +156,11 @@ class ReturnStatement(Statement):
         else:
             parsed = tokens
         super().__init__("returnStatement", parsed)
+    
+    def getExpression(self) -> list[Expression]:
+        """
+        returns a list with either nothing or the returned expression 
+        """
+        if len(self.tokens) > 2:
+            return [self.tokens[1]]
+        return []

@@ -66,3 +66,17 @@ class ExpressionList:
     
     def __repr__(self):
         return f"expressionList{self.tokens}"
+    
+    def number_of_expressions(self) -> int:
+        if not len(self.tokens):
+            return 0
+        return 1 + (len(self.tokens)-1)//2
+    
+    def getExpressions(self) -> list[Expression]:
+        ret = []
+        comma = False
+        for t in self.tokens:
+            if not comma:
+                ret.append(t)
+            comma = not comma
+        return ret

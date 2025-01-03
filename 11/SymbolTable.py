@@ -1,5 +1,5 @@
 from Class import ClassVarDec, SubroutineDec, VarDec, ParameterList
-from Token import COMMA_TOKEN
+from Token import COMMA_TOKEN, Token
 
 CLASS_KIND = "class"
 STATIC_KIND = "static"
@@ -26,19 +26,31 @@ class Symbol:
 class SymbolTable:
     def __init__(self, tokens: list):
         self.tokens = tokens
-        class_scope: list[Symbol] = []
-        subroutine_scope: dict[str, list[Symbol]] = {}
-        self.scopes = [class_scope, subroutine_scope]
+        self.class_scope: list[Symbol] = []
+        self.subroutine_scopes: dict[str, list[Symbol]] = {}
         self.curr_subroutine = ""
+        self.subroutines: list[SubroutineDec] = []
     
-    def __repr__(self):
-        nl = "\n"
-        class_scope = nl.join(map(str, self.scopes[0]))
-        subroutine_scopes = ""
-        for subroutine_name, scope in self.scopes[1].items():
-            subroutine_scope = nl.join(map(str, scope))
-            subroutine_scopes += f"{subroutine_name}:{nl}{subroutine_scope}{nl}" 
-        return f"class scope:{nl}{class_scope}{nl}subroutine scopes:{nl}{subroutine_scopes}"
+    def generate(self):
+        """
+        generates the symbol table for the all scopes
+        """
+        self.class_scope.append(Symbol(self.tokens[1].token, "className", CLASS_KIND, 0))
+        for token in self.tokens[3:-1]:
+            if type(token) is ClassVarDec:
+                self.class_scope.extend(self.new_symbols(token))
+            else:
+                self.generate_subroutine_table(token)
+                self.subroutines.append(token)
+        
+    def generate_subroutine_table(self, subroutine: SubroutineDec):
+        subroutine_symbol = self.new_symbols(subroutine)[0]
+        self.class_scope.append(subroutine_symbol)
+        self.curr_subroutine = subroutine_symbol.name
+        self.subroutine_scopes[self.curr_subroutine] = [Symbol("this", self.class_scope[0].name, ARG_KIND, 0)] + self.new_symbols(subroutine.params)
+        for var in subroutine.body.varDecs:
+            self.subroutine_scopes[self.curr_subroutine].extend(self.new_symbols(var))
+        self.curr_subroutine = ""
     
     def new_symbols(self, token) -> list[Symbol]:
         """
@@ -94,32 +106,44 @@ class SymbolTable:
         returns the number of defined variables in the current scope with the given kind
         """
         if self.curr_subroutine: # subroutine scope
-            scope_symbols = self.scopes[1][self.curr_subroutine]
+            scope_symbols = self.subroutine_scopes[self.curr_subroutine]
         else: # class scope
-            scope_symbols = self.scopes[0]
+            scope_symbols = self.class_scope
         scope_symbols = list[Symbol](scope_symbols)
         total = 0
         for symbol in scope_symbols:
             if symbol.kind == kind:
                 total += 1
         return total
-    
-    def generate(self):
-        """
-        generates the symbol table for the all scopes
-        """
-        self.scopes[0].append(Symbol(self.tokens[1].token, "className", CLASS_KIND, 0))
-        for token in self.tokens[3:-1]:
-            if type(token) is ClassVarDec:
-                self.scopes[0].extend(self.new_symbols(token))
-            else:
-                self.generate_subroutine_table(token)
         
-    def generate_subroutine_table(self, subroutine: SubroutineDec):
-        subroutine_symbol = self.new_symbols(subroutine)[0]
-        self.scopes[0].append(subroutine_symbol)
-        self.curr_subroutine = subroutine_symbol.name
-        self.scopes[1][self.curr_subroutine] = [Symbol("this", self.scopes[0][0].name, ARG_KIND, 0)] + self.new_symbols(subroutine.params)
-        for var in subroutine.body.varDecs:
-            self.scopes[1][self.curr_subroutine].extend(self.new_symbols(var))
+    def getClass(self) -> str:
+        if not len(self.class_scope):
+            raise RuntimeError("generate the table first")
+        return self.class_scope[0].name
+    
+    def number_of(self, kind: str, subroutine="") -> int:
+        """
+        returns the number of variable symbols of kind, in the given scope
+        """
+        if not subroutine and kind not in [FIELD_KIND, STATIC_KIND]:
+            raise KeyError(f"mismatch between kind '{kind}' and class scope")
+        if subroutine not in self.subroutine_scopes.keys():
+            raise KeyError(f"invalid subroutine name: {subroutine}")
+        if subroutine and kind not in [ARG_KIND, VAR_KIND]:
+            raise KeyError(f"mismatch between kind '{kind}' and subroutine '{subroutine}' scope")
+        self.curr_subroutine = subroutine
+        num = self.count_kind(kind)
         self.curr_subroutine = ""
+        if kind == ARG_KIND:
+            num -= 1 # "this" is always an argument
+        return num
+        
+    def __repr__(self):
+        nl = "\n"
+        class_scope = nl.join(map(str, self.class_scope))
+        subroutine_scopes = ""
+        for subroutine_name, scope in self.subroutine_scopes.items():
+            subroutine_scope = nl.join(map(str, scope))
+            subroutine_scopes += f"{subroutine_name}:{nl}{subroutine_scope}{nl}" 
+        return f"class scope:{nl}{class_scope}{nl}subroutine scopes:{nl}{subroutine_scopes}"
+    
