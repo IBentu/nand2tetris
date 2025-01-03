@@ -27,7 +27,7 @@ VAR_WITH_EXP = [t("a"), t("["), t("i"), t("]")]
 def test_Term():
     assert Term([t("1")]).tokens == [t("1")]
     assert Term([t("Hi")]).tokens == [t("Hi")]
-    assert Term([t("^"),t("1")]).tokens == [t("^"),t("1")]
+    assert Term([t("^"),t("1")]).tokens == [t("^"),Term([t("1")])]
     assert Term([t("false")]).tokens == [t("false")]
     assert Term([t("\"nice\"")]).tokens == [t("\"nice\"")]
     assert Term(VAR_WITH_EXP).tokens == [t("a"), t("["), Expression([t("i")]), t("]")]
