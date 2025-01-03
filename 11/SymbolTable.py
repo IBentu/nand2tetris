@@ -11,11 +11,17 @@ VAR_KIND = "local"
 
 
 class Symbol:
-    def __init__(self, name: str, type: str, kind: str, index: int):
+    def __init__(self, name: str, symbol_type: str, kind: str, index: int):
         self.name = name
-        self.type = type
+        self.symbol_type = symbol_type
         self.kind = kind
         self.index = index
+    
+    def __repr__(self):
+        return f"[name: {self.name}, type: {self.symbol_type}, kind: {self.kind}, index: {self.index}]"
+    
+    def __str__(self):
+        return self.__repr__()
 
 class SymbolTable:
     def __init__(self, tokens: list):
@@ -24,6 +30,15 @@ class SymbolTable:
         subroutine_scope: dict[str, list[Symbol]] = {}
         self.scopes = [class_scope, subroutine_scope]
         self.curr_subroutine = ""
+    
+    def __repr__(self):
+        nl = "\n"
+        class_scope = nl.join(map(str, self.scopes[0]))
+        subroutine_scopes = ""
+        for subroutine_name, scope in self.scopes[1].items():
+            subroutine_scope = nl.join(map(str, scope))
+            subroutine_scopes += f"{subroutine_name}:{nl}{subroutine_scope}{nl}" 
+        return f"class scope:{nl}{class_scope}{nl}subroutine scopes:{nl}{subroutine_scopes}"
     
     def new_symbols(self, token) -> list[Symbol]:
         """
@@ -38,41 +53,40 @@ class SymbolTable:
                 kind = STATIC_KIND
             else:
                 raise TypeError(f"invalid class variable kind: {tokens[0].token}")
-            type = tokens[1].token
+            symbol_type = tokens[1].token
             comma = True
             for token in tokens[2:-1]:
                 comma = not comma
                 if comma:
                     continue
-                ret.append(Symbol(token.token, type, kind, self.count_kind(kind)+len(ret)))
+                ret.append(Symbol(token.token, symbol_type, kind, self.count_kind(kind)+len(ret)))
         elif type(token) is SubroutineDec:
             tokens = token.header_tokens
-            ret.append(Symbol(tokens[2], tokens[1], SUBROUTINE_KIND, self.count_kind(SUBROUTINE_KIND))) # currently symbol type is subroutine return type, maybe will change
+            ret.append(Symbol(tokens[2].token, tokens[1].token, SUBROUTINE_KIND, self.count_kind(SUBROUTINE_KIND))) # currently symbol type is subroutine return type, maybe will change
         elif type(token) is ParameterList:
             tokens = token.tokens
             if len(tokens):
                 isType = True
                 for t in tokens:
                     if isType:
-                        type = t.token
+                        symbol_type = t.token
                         isType = False
                     elif t == COMMA_TOKEN:
                         isType = True
                     else:
-                        ret.append(Symbol(t.token, type, ARG_KIND, len(ret)+1)) # the first arg (index 0) is always "this"
+                        ret.append(Symbol(t.token, symbol_type, ARG_KIND, len(ret)+1)) # the first arg (index 0) is always "this"
         elif type(token) is VarDec:
             tokens = list(token.tokens)
             kind = VAR_KIND
-            type = tokens[1].token
+            symbol_type = tokens[1].token
             comma = True
             for token in tokens[2:-1]:
                 comma = not comma
                 if comma:
                     continue
-                ret.append(Symbol(token.token, type, kind, self.count_kind(kind)+len(ret)))
+                ret.append(Symbol(token.token, symbol_type, kind, self.count_kind(kind)+len(ret)))
         else:
-            # TODO
-            pass
+            raise TypeError("invalid declation kind")
         return ret
         
     def count_kind(self, kind: str) -> int:
@@ -108,3 +122,4 @@ class SymbolTable:
         self.scopes[1][self.curr_subroutine] = [Symbol("this", self.scopes[0][0].name, ARG_KIND, 0)] + self.new_symbols(subroutine.params)
         for var in subroutine.body.varDecs:
             self.scopes[1][self.curr_subroutine].extend(self.new_symbols(var))
+        self.curr_subroutine = ""
