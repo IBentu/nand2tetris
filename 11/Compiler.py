@@ -48,7 +48,7 @@ class Compiler:
             elif subroutine_type == "constructor":
                 ret.extend(self.compile_constructor(subroutine))
             else:
-                raise TypeError("invalid subroutine type")
+                raise TypeError(f"invalid subroutine type {subroutine_type}")
         return ret
     
     def compile_function(self, function: SubroutineDec) -> list[str]:
