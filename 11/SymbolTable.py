@@ -137,6 +137,21 @@ class SymbolTable:
         if kind == ARG_KIND:
             num -= 1 # "this" is always an argument
         return num
+    
+    def get_symbol(self, varName: str, subroutine: str) -> Symbol:
+        """
+        returns the symboll associated with varName.
+        starts by first searching the subroutine scope and if nothing was found searching the class scope
+        """
+        if subroutine not in self.subroutine_scopes.keys():
+            raise KeyError(f"invalid subroutine: {subroutine}")
+        for s in self.subroutine_scopes[subroutine]:
+            if s.name == varName:
+                return s
+        for s in self.class_scope:
+            if s.name == varName:
+                return s
+        raise ValueError(f"invalid varName: {varName}")
         
     def __repr__(self):
         nl = "\n"
