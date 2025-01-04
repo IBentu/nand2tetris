@@ -105,16 +105,20 @@ class IfStatement(Statement):
         parsed: list = [IF_TOKEN, BRA_TOKEN]
         expression_tokens = self.token_parser(if_tokens, BRA_TOKEN, KET_TOKEN, 1)
         parsed.append(Expression(expression_tokens[1:-1]))
+        self.expression : Expression = parsed[-1]
         parsed.append(KET_TOKEN)
         index = len(expression_tokens) + 1
         parsed.append(CURLY_BRA_TOKEN)
         parsed.append(Statements(if_tokens[index+1:-1]))
         parsed.append(CURLY_KET_TOKEN)
-        for else_tokens in else_tokens_lists:
+        self.statements : Statements = parsed[-2]
+        self.else_statements = []
+        for else_tokens in else_tokens_lists: # in hindsight this design is redundant since every if has a max of 1 else clause in jack 
             parsed.append(ELSE_TOKEN)
             parsed.append(CURLY_BRA_TOKEN)
             parsed.append(Statements(else_tokens[2:-1]))
-            parsed.append(CURLY_KET_TOKEN)       
+            parsed.append(CURLY_KET_TOKEN)
+            self.else_statements.append(parsed[-2])
         super().__init__("ifStatement", parsed)
 
 class WhileStatement(Statement):
@@ -125,10 +129,12 @@ class WhileStatement(Statement):
         parsed.append(BRA_TOKEN)
         parsed.append(Expression(expression_tokens[1:-1]))
         parsed.append(KET_TOKEN)
+        self.expression : Expression = parsed[-2]
         statements_tokens =  self.token_parser(tokens, CURLY_BRA_TOKEN, CURLY_KET_TOKEN, len(expression_tokens)+1)
         parsed.append(CURLY_BRA_TOKEN)
         parsed.append(Statements(statements_tokens[1:-1]))
         parsed.append(CURLY_KET_TOKEN)
+        self.statements : Statements = parsed[-2]
         super().__init__("whileStatement", parsed)
 
 class DoStatement(Statement):

@@ -3,7 +3,7 @@ from Term import Term, TERM_TYPE_CALL, TERM_TYPE_EXP, TERM_TYPE_INT, \
                  TERM_TYPE_KEYWORD,TERM_TYPE_STRING,TERM_TYPE_UNARY_OP, \
                  TERM_TYPE_VAR,TERM_TYPE_VAR_W_EXP
 from Expression import ExpressionList, Expression
-from Statement import DoStatement, ReturnStatement, LetStatement, WhileStatement, IfStatement
+from Statement import DoStatement, ReturnStatement, LetStatement, WhileStatement, IfStatement, Statements
 from Class import SubroutineDec
 
 OP2VM_CODE = {
@@ -29,6 +29,8 @@ class Compiler:
         self.symbol_table = symbols
         self.className = symbols.getClass()
         self.subroutines = symbols.subroutines
+        self.if_labels = 0
+        self.while_labels = 0
         self.vm_code = self.compile()
         
     def OutputString(self) -> str:
@@ -52,7 +54,17 @@ class Compiler:
     def compile_function(self, function: SubroutineDec) -> list[str]:
         name = function.getName()
         ret = [f"function {self.className}.{name} {self.symbol_table.number_of(ARG_KIND, name)}"]
-        for s in function.body.statements.statements:
+        return ret + self.compile_statements(function.body.statements.statements)
+    
+    def compile_method(self, method: SubroutineDec) -> list[str]:
+        pass # TODO
+        
+    def compile_constructor(self, constructor: SubroutineDec) -> list[str]:
+        pass # TODO
+    
+    def compile_statements(self, statements: Statements) -> list[str]:
+        ret = []
+        for s in statements:
             if type(s) == LetStatement:
                 ret.extend(self.compile_let(s))
             elif type(s) == DoStatement:
@@ -67,12 +79,6 @@ class Compiler:
                 raise TypeError(f"invalid type of statement: {s}")
         return ret
     
-    def compile_method(self, method: SubroutineDec) -> list[str]:
-        pass # TODO
-        
-    def compile_constructor(self, constructor: SubroutineDec) -> list[str]:
-        pass # TODO
-    
     def compile_return(self, return_s: ReturnStatement) -> list[str]:
         ret = return_s.getExpression()
         if not len(ret):
@@ -86,19 +92,36 @@ class Compiler:
         ret = self.compile_expressionList(exps)
         ret.append(f"call {do_s.getSubroutineName()} {exps.number_of_expressions()}")
         # since do does not expect anything to return, 
-        # we need to pop the stack since a call ALWAYS return a value to the top of the stack
+        # we need to pop the stack because call ALWAYS has a return value at the top of the stack
         ret.append(self.pop("temp", 0))
+        return ret
+
+    def compile_if(self, if_s: IfStatement) -> list[str]:
+        ret = self.compile_expression(if_s.expression)
+        ret.append(f"if-goto IF_TRUE{self.if_labels}")
+        ret.append(f"goto IF_FALSE{self.if_labels}")
+        ret.append(f"IF_TRUE{self.if_labels}:")
+        ret.extend(self.compile_statements(if_s.statements))
+        ret.append(f"IF_FALSE{self.if_labels}:")
+        if len(if_s.else_statements):
+            ret.extend(self.compile_statements(if_s.else_statements[0]))
+        self.if_labels += 1
+        return ret
+
+    def compile_while(self, while_s: WhileStatement) -> list[str]:
+        ret = [f"WHILE_START{self.while_labels}"]
+        ret.extend(self.compile_expression(while_s.expression))
+        ret.append("not")
+        ret.append(f"goto-if WHILE_END{self.while_labels}")
+        ret.extend(self.compile_statements(while_s.statements))
+        ret.append(f"goto WHILE_START{self.while_labels}")
+        ret.append(f"WHILE_END{self.while_labels}")
+        self.while_labels += 1
         return ret
     
     def compile_let(self, let_s: LetStatement) -> list[str]:
-        pass # TODO
+        pass # TODO now
 
-    def compile_while(self, while_s: WhileStatement) -> list[str]:
-        pass # TODO
-    
-    def compile_if(self, if_s: IfStatement) -> list[str]:
-        pass # TODO
-    
     def compile_expressionList(self, exps: ExpressionList) -> list[str]:
         """
         pushes the expressions to the stack in their order
@@ -128,13 +151,21 @@ class Compiler:
         elif term.termType == TERM_TYPE_UNARY_OP:
             ret = self.compile_term(term.tokens[1])
             ret.append(UNARY_OP2VM_CODE[term.tokens[0].token])
-        elif term.termType == TERM_TYPE_CALL:
-            pass # TODO
-        elif term.termType == TERM_TYPE_STRING:
-            pass # TODO
         elif term.termType == TERM_TYPE_KEYWORD:
-            pass # TODO
+            keyword = term.tokens[0]
+            if keyword == "true":
+                ret = [self.push("constant", 1), "neg"]
+            elif keyword == "false" or keyword == "null":
+                ret.append(self.push("constant", 0)) 
+            elif keyword == "this":
+                ret.append(self.push("local", 0)) 
+            else:
+                raise ValueError("invalid term keyword")
+        elif term.termType == TERM_TYPE_CALL:
+            pass # TODO now
         elif term.termType == TERM_TYPE_VAR:
+            pass # TODO now
+        elif term.termType == TERM_TYPE_STRING:
             pass # TODO
         elif term.termType == TERM_TYPE_VAR_W_EXP:
             pass # TODO
