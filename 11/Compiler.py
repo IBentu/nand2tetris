@@ -60,10 +60,10 @@ class Compiler:
         return ret + self.compile_statements(function.body.statements)
     
     def compile_method(self, method: SubroutineDec) -> list[str]:
-        pass # TODO
+        pass # TODO now
         
     def compile_constructor(self, constructor: SubroutineDec) -> list[str]:
-        pass # TODO
+        pass # TODO now
     
     def compile_statements(self, statements: Statements) -> list[str]:
         ret = []
@@ -133,7 +133,7 @@ class Compiler:
         if var.symbol_type in BUILTIN_TYPES:
             ret.append(self.pop(var.kind, var.index))
         else:
-            pass # TODO: indexing...
+            pass # TODO:
         return ret
 
     def compile_expressionList(self, exps: ExpressionList) -> list[str]:
@@ -192,7 +192,7 @@ class Compiler:
                 try:
                     # varName.subroutineName
                     var = self.symbol_table.get_symbol(subroutineTokens[0])
-                    # TODO: methods...
+                    # TODO: now
                 except:
                     # className.subroutineName
                     subroutineName = "".join(map(lambda x: x.token, subroutineTokens))
