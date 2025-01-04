@@ -194,7 +194,8 @@ class Compiler:
             ret.append(f"call {subroutineName} {exps.number_of_expressions()}")
 
         elif term.termType == TERM_TYPE_VAR:
-            pass # TODO now
+            var = self.symbol_table.get_symbol(term.tokens[0].token, self.curr_subroutine)
+            ret.append(self.push(var.kind, var.index))
         elif term.termType == TERM_TYPE_STRING:
             pass # TODO
         elif term.termType == TERM_TYPE_VAR_W_EXP:
