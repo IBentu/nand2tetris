@@ -47,12 +47,15 @@ class SymbolTable:
         subroutine_symbol = self.new_symbols(subroutine)[0]
         self.class_scope.append(subroutine_symbol)
         self.curr_subroutine = subroutine_symbol.name
-        self.subroutine_scopes[self.curr_subroutine] = [Symbol("this", self.class_scope[0].name, ARG_KIND, 0)] + self.new_symbols(subroutine.params)
+        if subroutine.header_tokens[0] == "method":
+            self.subroutine_scopes[self.curr_subroutine] = [Symbol("this", self.class_scope[0].name, ARG_KIND, 0)] + self.new_symbols(subroutine.params, 1)
+        else:
+            self.subroutine_scopes[self.curr_subroutine] = self.new_symbols(subroutine.params)
         for var in subroutine.body.varDecs:
             self.subroutine_scopes[self.curr_subroutine].extend(self.new_symbols(var))
         self.curr_subroutine = ""
     
-    def new_symbols(self, token) -> list[Symbol]:
+    def new_symbols(self, token, offset=0) -> list[Symbol]:
         """
         returns a new symbol based on the variable type and scope
         """
@@ -86,7 +89,7 @@ class SymbolTable:
                     elif t == COMMA_TOKEN:
                         isType = True
                     else:
-                        ret.append(Symbol(t.token, symbol_type, ARG_KIND, len(ret)+1)) # the first arg (index 0) is always "this"
+                        ret.append(Symbol(t.token, symbol_type, ARG_KIND, len(ret)+offset))
         elif type(token) is VarDec:
             tokens = list(token.tokens)
             kind = VAR_KIND
@@ -121,7 +124,7 @@ class SymbolTable:
             raise RuntimeError("generate the table first")
         return self.class_scope[0].name
     
-    def number_of(self, kind: str, subroutine="") -> int:
+    def number_of(self, kind: str, subroutine="", method=False) -> int:
         """
         returns the number of variable symbols of kind, in the given scope
         """

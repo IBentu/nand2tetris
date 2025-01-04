@@ -1,4 +1,4 @@
-from SymbolTable import SymbolTable, ARG_KIND
+from SymbolTable import SymbolTable, VAR_KIND
 from Term import Term, TERM_TYPE_CALL, TERM_TYPE_EXP, TERM_TYPE_INT, \
                  TERM_TYPE_KEYWORD,TERM_TYPE_STRING,TERM_TYPE_UNARY_OP, \
                  TERM_TYPE_VAR,TERM_TYPE_VAR_W_EXP
@@ -24,7 +24,7 @@ UNARY_OP2VM_CODE = {
     "#": "shiftright",
 }
 
-BUILTIN_TYPES = ["int", "char", "bool"]
+BUILTIN_TYPES = ["int", "char", "boolean"]
 
 class Compiler:
     def __init__(self, symbols: SymbolTable):
@@ -56,7 +56,7 @@ class Compiler:
     
     def compile_function(self, function: SubroutineDec) -> list[str]:
         name = function.getName()
-        ret = [f"function {self.className}.{name} {self.symbol_table.number_of(ARG_KIND, name)}"]
+        ret = [f"function {self.className}.{name} {self.symbol_table.number_of(VAR_KIND, name)}"]
         return ret + self.compile_statements(function.body.statements)
     
     def compile_method(self, method: SubroutineDec) -> list[str]:
@@ -106,24 +106,24 @@ class Compiler:
         ret = self.compile_expression(if_s.expression)
         ret.append(f"if-goto IF_TRUE{self.if_labels}")
         ret.append(f"goto IF_FALSE{self.if_labels}")
-        ret.append(f"IF_TRUE{self.if_labels}:")
+        ret.append(f"label IF_TRUE{self.if_labels}")
         ret.extend(self.compile_statements(if_s.statements))
         ret.append(f"goto IF_END{self.if_labels}")
-        ret.append(f"IF_FALSE{self.if_labels}:")
+        ret.append(f"label IF_FALSE{self.if_labels}")
         if len(if_s.else_statements):
             ret.extend(self.compile_statements(if_s.else_statements[0]))
-        ret.append(f"IF_END{self.if_labels}")
+        ret.append(f"label IF_END{self.if_labels}")
         self.if_labels += 1
         return ret
 
     def compile_while(self, while_s: WhileStatement) -> list[str]:
-        ret = [f"WHILE_START{self.while_labels}"]
+        ret = [f"label WHILE_START{self.while_labels}"]
         ret.extend(self.compile_expression(while_s.expression))
         ret.append("not")
-        ret.append(f"goto-if WHILE_END{self.while_labels}")
+        ret.append(f"if-goto WHILE_END{self.while_labels}")
         ret.extend(self.compile_statements(while_s.statements))
         ret.append(f"goto WHILE_START{self.while_labels}")
-        ret.append(f"WHILE_END{self.while_labels}")
+        ret.append(f"label WHILE_END{self.while_labels}")
         self.while_labels += 1
         return ret
     
@@ -168,7 +168,7 @@ class Compiler:
         elif term.termType == TERM_TYPE_KEYWORD:
             keyword = term.tokens[0].token
             if keyword == "true":
-                ret = [self.push("constant", 1), "neg"]
+                ret = [self.push("constant", 0), "not"]
             elif keyword == "false" or keyword == "null":
                 ret.append(self.push("constant", 0)) 
             elif keyword == "this":
