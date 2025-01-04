@@ -37,13 +37,12 @@ class Compiler:
         self.vm_code = self.compile()
         
     def OutputString(self) -> str:
-        print(self.symbol_table)
         return '\n'.join(self.vm_code)+"\n"
 
     def compile(self) -> list[str]:
         ret = []
         for subroutine in self.subroutines:
-            self.curr_subroutine = subroutine
+            self.curr_subroutine = subroutine.getName()
             subroutine_type = subroutine.header_tokens[0].token
             if subroutine_type == "function":
                 ret.extend(self.compile_function(subroutine))
@@ -58,7 +57,7 @@ class Compiler:
     def compile_function(self, function: SubroutineDec) -> list[str]:
         name = function.getName()
         ret = [f"function {self.className}.{name} {self.symbol_table.number_of(ARG_KIND, name)}"]
-        return ret + self.compile_statements(function.body.statements.statements)
+        return ret + self.compile_statements(function.body.statements)
     
     def compile_method(self, method: SubroutineDec) -> list[str]:
         pass # TODO
@@ -68,7 +67,7 @@ class Compiler:
     
     def compile_statements(self, statements: Statements) -> list[str]:
         ret = []
-        for s in statements:
+        for s in statements.statements:
             if type(s) == LetStatement:
                 ret.extend(self.compile_let(s))
             elif type(s) == DoStatement:
@@ -84,10 +83,13 @@ class Compiler:
         return ret
     
     def compile_return(self, return_s: ReturnStatement) -> list[str]:
-        ret = return_s.getExpression()
-        if not len(ret):
+        ret = []
+        exp = return_s.getExpression()
+        if not len(exp):
             # if nothing is returned, we need to push some constant, since the caller ALWAYS expects a return value
             ret.append(self.push("constant", 0))
+        else:
+            ret = self.compile_expression(exp[0])
         ret.append("return")
         return ret
     
@@ -127,7 +129,7 @@ class Compiler:
     
     def compile_let(self, let_s: LetStatement) -> list[str]:
         ret = self.compile_expression(let_s.value)
-        var = self.symbol_table.get_symbol(let_s.varName, self.curr_subroutine)
+        var = self.symbol_table.get_symbol(let_s.varName.token, self.curr_subroutine)
         if var.symbol_type in BUILTIN_TYPES:
             ret.append(self.pop(var.kind, var.index))
         else:
@@ -164,7 +166,7 @@ class Compiler:
             ret = self.compile_term(term.tokens[1])
             ret.append(UNARY_OP2VM_CODE[term.tokens[0].token])
         elif term.termType == TERM_TYPE_KEYWORD:
-            keyword = term.tokens[0]
+            keyword = term.tokens[0].token
             if keyword == "true":
                 ret = [self.push("constant", 1), "neg"]
             elif keyword == "false" or keyword == "null":
@@ -172,7 +174,10 @@ class Compiler:
             elif keyword == "this":
                 ret.append(self.push("local", 0)) 
             else:
-                raise ValueError("invalid term keyword")
+                raise ValueError(f"invalid term keyword {keyword.token}")
+        elif term.termType == TERM_TYPE_VAR:
+            var = self.symbol_table.get_symbol(term.tokens[0].token, self.curr_subroutine)
+            ret.append(self.push(var.kind, var.index))
         elif term.termType == TERM_TYPE_CALL:
             for i, t in enumerate(term.tokens):
                 if type(t) is ExpressionList:
@@ -192,10 +197,6 @@ class Compiler:
                     # className.subroutineName
                     subroutineName = "".join(map(lambda x: x.token, subroutineTokens))
             ret.append(f"call {subroutineName} {exps.number_of_expressions()}")
-
-        elif term.termType == TERM_TYPE_VAR:
-            var = self.symbol_table.get_symbol(term.tokens[0].token, self.curr_subroutine)
-            ret.append(self.push(var.kind, var.index))
         elif term.termType == TERM_TYPE_STRING:
             pass # TODO
         elif term.termType == TERM_TYPE_VAR_W_EXP:
