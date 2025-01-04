@@ -102,9 +102,11 @@ class Compiler:
         ret.append(f"goto IF_FALSE{self.if_labels}")
         ret.append(f"IF_TRUE{self.if_labels}:")
         ret.extend(self.compile_statements(if_s.statements))
+        ret.append(f"goto IF_END{self.if_labels}")
         ret.append(f"IF_FALSE{self.if_labels}:")
         if len(if_s.else_statements):
             ret.extend(self.compile_statements(if_s.else_statements[0]))
+        ret.append(f"IF_END{self.if_labels}")
         self.if_labels += 1
         return ret
 
