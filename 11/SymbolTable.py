@@ -151,7 +151,7 @@ class SymbolTable:
         for s in self.class_scope:
             if s.name == varName:
                 return s
-        raise ValueError(f"invalid varName: {varName}")
+        raise ValueError(f"varName '{varName}' not in symbol table")
         
     def __repr__(self):
         nl = "\n"

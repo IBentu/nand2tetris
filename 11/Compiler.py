@@ -174,7 +174,25 @@ class Compiler:
             else:
                 raise ValueError("invalid term keyword")
         elif term.termType == TERM_TYPE_CALL:
-            pass # TODO now
+            for i, t in enumerate(term.tokens):
+                if type(t) is ExpressionList:
+                    exps = t
+                    break
+            ret = self.compile_expressionList(exps)
+            subroutineTokens = term.tokens[:i-1]
+            if len(subroutineTokens) == 1:
+                # subroutineName
+                subroutineName = f"{self.className}.{subroutineTokens[0].token}"
+            else:
+                try:
+                    # varName.subroutineName
+                    var = self.symbol_table.get_symbol(subroutineTokens[0])
+                    # TODO: methods...
+                except:
+                    # className.subroutineName
+                    subroutineName = "".join(map(lambda x: x.token, subroutineTokens))
+            ret.append(f"call {subroutineName} {exps.number_of_expressions()}")
+
         elif term.termType == TERM_TYPE_VAR:
             pass # TODO now
         elif term.termType == TERM_TYPE_STRING:
