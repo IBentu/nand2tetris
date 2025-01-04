@@ -24,6 +24,8 @@ UNARY_OP2VM_CODE = {
     "#": "shiftright",
 }
 
+BUILTIN_TYPES = ["int", "char", "bool"]
+
 class Compiler:
     def __init__(self, symbols: SymbolTable):
         self.symbol_table = symbols
@@ -31,6 +33,7 @@ class Compiler:
         self.subroutines = symbols.subroutines
         self.if_labels = 0
         self.while_labels = 0
+        self.curr_subroutine = ""
         self.vm_code = self.compile()
         
     def OutputString(self) -> str:
@@ -40,6 +43,7 @@ class Compiler:
     def compile(self) -> list[str]:
         ret = []
         for subroutine in self.subroutines:
+            self.curr_subroutine = subroutine
             subroutine_type = subroutine.header_tokens[0].token
             if subroutine_type == "function":
                 ret.extend(self.compile_function(subroutine))
@@ -122,7 +126,13 @@ class Compiler:
         return ret
     
     def compile_let(self, let_s: LetStatement) -> list[str]:
-        pass # TODO now
+        ret = self.compile_expression(let_s.value)
+        var = self.symbol_table.get_symbol(let_s.varName, self.curr_subroutine)
+        if var.symbol_type in BUILTIN_TYPES:
+            ret.append(self.pop(var.kind, var.index))
+        else:
+            pass # TODO: indexing...
+        return ret
 
     def compile_expressionList(self, exps: ExpressionList) -> list[str]:
         """

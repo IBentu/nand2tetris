@@ -86,18 +86,22 @@ class Statements:
 class LetStatement(Statement):
     def __init__(self, tokens: list[Token]):
         parsed: list = tokens[:2]
+        self.varName = tokens[1]
+        self.index : Expression = None
         index = 2
         if tokens[2] == SQUARE_BRA_TOKEN:
             parsed.append(SQUARE_BRA_TOKEN)
             expression_tokens = self.token_parser(tokens, SQUARE_BRA_TOKEN, SQUARE_KET_TOKEN, 2)
             index += len(expression_tokens)
             index_expression = Expression(expression_tokens[1:-1])
+            self.index = index_expression
             parsed.append(index_expression)
             parsed.append(SQUARE_KET_TOKEN)
         parsed.append(EQ_TOKEN)
         expression_tokens = self.token_parser(tokens, EQ_TOKEN, SEMICOLON_TOKEN, index)
         parsed.append(Expression(expression_tokens[1:-1]))
         parsed.append(SEMICOLON_TOKEN)
+        self.value : Expression = parsed[-2]
         super().__init__("letStatement", parsed)
             
 class IfStatement(Statement):
