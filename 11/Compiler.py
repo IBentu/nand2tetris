@@ -1,4 +1,4 @@
-from SymbolTable import SymbolTable, VAR_KIND, Symbol
+from SymbolTable import SymbolTable, VAR_KIND, Symbol, FIELD_KIND
 from Term import Term, TERM_TYPE_CALL, TERM_TYPE_EXP, TERM_TYPE_INT, \
                  TERM_TYPE_KEYWORD,TERM_TYPE_STRING,TERM_TYPE_UNARY_OP, \
                  TERM_TYPE_VAR,TERM_TYPE_VAR_W_EXP
@@ -61,11 +61,21 @@ class Compiler:
         return ret + self.compile_statements(function.body.statements)
     
     def compile_method(self, method: SubroutineDec) -> list[str]:
-        pass # TODO now
+        name = method.getName()
+        ret = [f"function {self.className}.{name} {self.symbol_table.number_of(VAR_KIND, name)}"]
+        # first argument in a method is always "this"
+        ret.append(self.push("argument", 0))
+        ret.append(self.pop("pointer", 0))
+        return ret + self.compile_statements(method.body.statements)
+
         
     def compile_constructor(self, constructor: SubroutineDec) -> list[str]:
-        pass # TODO now
-    
+        name = constructor.getName() # usually is "new"
+        ret = [f"function {self.className}.{name} {self.symbol_table.number_of(VAR_KIND, name)}"]
+        ret.append(self.push("constant", self.symbol_table.number_of(FIELD_KIND)))
+        ret.extend([f"call Memory.alloc 1", "pop pointer 0"]) # allocate the number of field variable and pop pointer 0 to point "this" segment to correct address
+        return ret + self.compile_statements(constructor.body.statements)
+
     def compile_statements(self, statements: Statements) -> list[str]:
         ret = []
         for s in statements.statements:
@@ -111,7 +121,7 @@ class Compiler:
     
     def get_subroutine_name(self, subroutineNameTokens: list) -> tuple[str, Optional[Symbol]]:
         """
-        return the subroutineName (class.name) and the symbol for the instance if it's a method 
+        return the subroutineName (className.subroutineName) and: None if it's function
         """
         if len(subroutineNameTokens) == 1:
                 # subroutineName
@@ -119,10 +129,10 @@ class Compiler:
         else:
             try:
                 # varName.subroutineName
-                var = self.symbol_table.get_symbol(subroutineNameTokens[0])
+                var = self.symbol_table.get_symbol(subroutineNameTokens[0].token, self.curr_subroutine)
                 if var.symbol_type in BUILTIN_TYPES:
                     raise TypeError(f"builtin type '{var.symbol_type}' does not have methods")
-                return f"{var.symbol_type}.{subroutineNameTokens[2]}", var
+                return f"{var.symbol_type}.{subroutineNameTokens[2].token}", var
             except:
                 # className.subroutineName
                 return "".join(map(lambda x: x.token, subroutineNameTokens)), None
