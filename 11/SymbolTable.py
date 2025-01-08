@@ -1,5 +1,5 @@
 from Class import ClassVarDec, SubroutineDec, VarDec, ParameterList
-from Token import COMMA_TOKEN, Token
+from Token import COMMA_TOKEN
 
 CLASS_KIND = "pointer"
 STATIC_KIND = "static"
