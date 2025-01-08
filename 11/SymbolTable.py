@@ -47,7 +47,7 @@ class SymbolTable:
         subroutine_symbol = self.new_symbols(subroutine)[0]
         self.class_scope.append(subroutine_symbol)
         self.curr_subroutine = subroutine_symbol.name
-        if subroutine.header_tokens[0] == "method":
+        if subroutine.header_tokens[0].token == "method":
             self.subroutine_scopes[self.curr_subroutine] = [Symbol("this", self.class_scope[0].name, ARG_KIND, 0)] + self.new_symbols(subroutine.params, 1)
         else:
             self.subroutine_scopes[self.curr_subroutine] = self.new_symbols(subroutine.params)
@@ -112,7 +112,6 @@ class SymbolTable:
             scope_symbols = self.subroutine_scopes[self.curr_subroutine]
         else: # class scope
             scope_symbols = self.class_scope
-        scope_symbols = list[Symbol](scope_symbols)
         total = 0
         for symbol in scope_symbols:
             if symbol.kind == kind:
@@ -124,21 +123,20 @@ class SymbolTable:
             raise RuntimeError("generate the table first")
         return self.class_scope[0].name
     
-    def number_of(self, kind: str, subroutine="", method=False) -> int:
+    def number_of(self, kind: str, subroutine="") -> int:
         """
         returns the number of variable symbols of kind, in the given scope
         """
         if not subroutine and kind not in [FIELD_KIND, STATIC_KIND]:
             raise KeyError(f"mismatch between kind '{kind}' and class scope")
-        if subroutine not in self.subroutine_scopes.keys():
-            raise KeyError(f"invalid subroutine name: {subroutine}")
-        if subroutine and kind not in [ARG_KIND, VAR_KIND]:
-            raise KeyError(f"mismatch between kind '{kind}' and subroutine '{subroutine}' scope")
+        if subroutine:
+            if subroutine not in self.subroutine_scopes.keys():
+                raise KeyError(f"invalid subroutine name: {subroutine}")
+            if kind not in [ARG_KIND, VAR_KIND]:
+                raise KeyError(f"mismatch between kind '{kind}' and subroutine '{subroutine}' scope")
         self.curr_subroutine = subroutine
         num = self.count_kind(kind)
         self.curr_subroutine = ""
-        if kind == ARG_KIND:
-            num -= 1 # "this" is always an argument
         return num
     
     def get_symbol(self, varName: str, subroutine="") -> Symbol:

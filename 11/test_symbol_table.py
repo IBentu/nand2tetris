@@ -5,7 +5,7 @@ import os
 
 
 def test_by_eye():
-    tokenizer = Tokenizer(os.getcwd()+"/nand2tetris/11/Square/SquareGame.jack")
+    tokenizer = Tokenizer(os.getcwd()+"/nand2tetris/11/Square/Square.jack")
     tokenizer.tokenize()
     parser = TokenParser(tokenizer.tokens)
     symbol_table = SymbolTable(parser.token_tree)
