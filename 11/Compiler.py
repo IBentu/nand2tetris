@@ -205,7 +205,7 @@ class Compiler:
             elif keyword == "false" or keyword == "null":
                 ret.append(self.push("constant", 0)) 
             elif keyword == "this":
-                ret.append(self.push("local", 0)) 
+                ret.append(self.push("pointer", 0)) 
             else:
                 raise ValueError(f"invalid term keyword {keyword.token}")
         elif term.termType == TERM_TYPE_VAR:
