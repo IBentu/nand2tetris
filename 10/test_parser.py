@@ -84,7 +84,6 @@ def test_Statements():
     assert Statements([*LET, *LET, *DO, *IF, *ELSE, *ELSE, *DO]).statements == [LetStatement(LET), LetStatement(LET), DoStatement(DO), IfStatement(IF, [ELSE, ELSE]), DoStatement(DO)]
     assert Statements(IF_ELSE).statements[0] == IfStatement(IF_ELSE[:27], [IF_ELSE[27:]])
     assert Statements(IF_ELSE_IN_IF).statements[0] == IfStatement(IF_ELSE_IN_IF)
-    # TODO: test WhileStatement
 
 BASIC_CLASS = convert2tokens("class Test { method void incSize ( ) { if ( ( ( y + size ) < 254 ) & ( ( x + size ) < 510 ) ) { do erase ( ) ; let size = size + 2 ; do draw ( ) ; } return ; } }")
 BASIC_CLASS2 = convert2tokens("class Test2 { method void decSize ( ) { if ( size > 2 ) { do erase ( ) ; let size = size - 2 ; do draw ( ) ; } return ; } }")
