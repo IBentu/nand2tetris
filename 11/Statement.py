@@ -155,8 +155,8 @@ class DoStatement(Statement):
             if type(t) is ExpressionList:
                 return t
     
-    def getSubroutineName(self) -> str:
-        return "".join(map(lambda x: x.token, self.token_parser(self.tokens, DO_TOKEN, BRA_TOKEN)[1:-1]))
+    def getSubroutineNameTokens(self) -> str:
+        return self.token_parser(self.tokens, DO_TOKEN, BRA_TOKEN)[1:-1]
         
 
 class ReturnStatement(Statement):

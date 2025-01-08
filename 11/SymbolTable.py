@@ -1,7 +1,7 @@
 from Class import ClassVarDec, SubroutineDec, VarDec, ParameterList
 from Token import COMMA_TOKEN, Token
 
-CLASS_KIND = "class"
+CLASS_KIND = "pointer"
 STATIC_KIND = "static"
 FIELD_KIND = "this"
 
@@ -141,16 +141,17 @@ class SymbolTable:
             num -= 1 # "this" is always an argument
         return num
     
-    def get_symbol(self, varName: str, subroutine: str) -> Symbol:
+    def get_symbol(self, varName: str, subroutine="") -> Symbol:
         """
-        returns the symboll associated with varName.
+        returns the symbol associated with varName.
         starts by first searching the subroutine scope and if nothing was found searching the class scope
         """
-        if subroutine not in self.subroutine_scopes.keys():
-            raise KeyError(f"invalid subroutine: {subroutine}")
-        for s in self.subroutine_scopes[subroutine]:
-            if s.name == varName:
-                return s
+        if subroutine:
+            if subroutine not in self.subroutine_scopes.keys():
+                raise KeyError(f"invalid subroutine: {subroutine}")
+            for s in self.subroutine_scopes[subroutine]:
+                if s.name == varName:
+                    return s
         for s in self.class_scope:
             if s.name == varName:
                 return s
