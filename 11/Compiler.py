@@ -225,14 +225,14 @@ class Compiler:
             ret = []
             method = 0
             if symbol:
-                method = 1
+                method = 1 # methods have "this" argument as well as the ExpressionList
                 ret.append(self.push(symbol.kind, symbol.index))
             ret.extend(self.compile_expressionList(exps))
             ret.append(f"call {subroutineName} {exps.number_of_expressions()+method}")
         elif term.termType == TERM_TYPE_STRING:
-            pass # TODO
+            pass # TODO now
         elif term.termType == TERM_TYPE_VAR_W_EXP:
-            pass # TODO
+            pass # TODO now
         else:
             raise TypeError("invalid term type")
         return ret
