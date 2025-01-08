@@ -14,8 +14,7 @@
 ## What should I change in this file to make it work with my project?
 # IMPORTANT: This file assumes that the main is contained in "Main.py".
 #            If your main is contained elsewhere, you will need to change this.
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-python3 $SCRIPTPATH/Main.py $*
+python3 Main.py $*
 
 # This file is part of nand2tetris, as taught in The Hebrew University, and 
 # was written by Aviv Yaish. It is an extension to the specifications given

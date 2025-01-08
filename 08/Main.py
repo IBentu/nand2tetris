@@ -9,7 +9,7 @@ from TranslationFunctions import bootstrap,\
                                  call_instruction,\
                                  function_instruction,\
                                  return_instruction,\
-                                 ALL_ARITHMETIC_LOGICAL_OPS
+                                 ALL_ARITHMETIC_LOGICAL_OPS, nl
 
 class Translator:
     def __init__(self, input_file: str):
@@ -20,9 +20,9 @@ class Translator:
         if path[1] != "vm":
             print("ERROR: file type should be .vm")
             sys.exit(1)
-        elif not path[0][0].isupper():
-            print(f"ERROR: file should start with a capital letter: {path[0]}.vm")
-            sys.exit(1)
+        #elif not path[0][0].isupper() and path[0][0].isdigit():
+        #    print(f"ERROR: file should start with a capital letter: {path[0]}.vm")
+        #    sys.exit(1)
         self.name = path[0]
         self.output_file = input_file.replace('.vm', '.asm')
         self.instructions = []
@@ -46,18 +46,19 @@ class Translator:
     
     def clean_instructions(self):
         if not self.asm_instructions:
+            return
             raise Exception("no assembly code to clean!")
         cleaned = []
-        self.asm_instructions = ("\n".join(self.asm_instructions)).split("\n")
+        self.asm_instructions = (nl.join(self.asm_instructions)).split(nl)
         for line in self.asm_instructions:
-            if line.startswith("//") or set(line).issubset(set(" /\n")):
+            if line.startswith("//") or set(line).issubset(set([" ", "/", nl])):
                 continue
             cleaned.append(line)
         self.asm_instructions = cleaned        
     
     def write_output(self):
         """Writes the binary instructions to the output file."""
-        instructions = "\n".join(self.asm_instructions)
+        instructions = nl.join(self.asm_instructions)
         with open(self.output_file, 'w') as file:
             file.write(instructions)
 
@@ -93,14 +94,6 @@ class Translator:
             except Exception as e:
                 print(f"failed on line {i+1}: {e}")
                 sys.exit(1)
-        """
-        # inifinite loop should be implemented in Sys.init
-        self.asm_instructions.append("\n".join([
-                                                f"({self.name}.END)",
-                                                f"@{self.name}.END",
-                                                "0;JMP"
-                                                ]))
-        """
         
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -121,10 +114,11 @@ if __name__ == '__main__':
             translators.append(translator)
         if not len(translators):
             print("no .vm files in directory")
-            sys.exit(1)
-        writer = translators[0]
-        for t in translators[1:]:
-            writer.asm_instructions.extend(t.asm_instructions)
+            writer = Translator("Write.vm")
+        else:
+            writer = translators[0]
+            for t in translators[1:]:
+                writer.asm_instructions.extend(t.asm_instructions)
         writer.output_file = f"{input_path}/{name}.asm"
     elif os.path.isfile(input_path):
         writer = Translator(input_path)
