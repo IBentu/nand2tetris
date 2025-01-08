@@ -124,6 +124,9 @@ class IfStatement(Statement):
             parsed.append(CURLY_KET_TOKEN)
             self.else_statements.append(parsed[-2])
         super().__init__("ifStatement", parsed)
+    
+    def isElse(self) -> bool:
+        return  bool(len(self.else_statements))
 
 class WhileStatement(Statement):
     def __init__(self, tokens: list[Token]):

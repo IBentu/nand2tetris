@@ -139,28 +139,33 @@ class Compiler:
         
 
     def compile_if(self, if_s: IfStatement) -> list[str]:
-        ret = self.compile_expression(if_s.expression)
-        ret.append(f"if-goto IF_TRUE{self.if_labels}")
-        ret.append(f"goto IF_FALSE{self.if_labels}")
-        ret.append(f"label IF_TRUE{self.if_labels}")
-        ret.extend(self.compile_statements(if_s.statements))
-        ret.append(f"goto IF_END{self.if_labels}")
-        ret.append(f"label IF_FALSE{self.if_labels}")
-        if len(if_s.else_statements):
-            ret.extend(self.compile_statements(if_s.else_statements[0]))
-        ret.append(f"label IF_END{self.if_labels}")
+        label_num = self.if_labels
         self.if_labels += 1
+        ret = self.compile_expression(if_s.expression)
+        ret.append(f"if-goto IF_TRUE{label_num}")
+        if if_s.isElse():
+            ret.append(f"goto IF_FALSE{label_num}")
+        else:
+            ret.append(f"goto IF_END{label_num}")
+        ret.append(f"label IF_TRUE{label_num}")
+        ret.extend(self.compile_statements(if_s.statements))
+        if if_s.isElse():
+            ret.append(f"goto IF_END{label_num}")
+            ret.append(f"label IF_FALSE{label_num}")
+            ret.extend(self.compile_statements(if_s.else_statements[0]))
+        ret.append(f"label IF_END{label_num}")
         return ret
 
     def compile_while(self, while_s: WhileStatement) -> list[str]:
-        ret = [f"label WHILE_START{self.while_labels}"]
+        label_num = self.while_labels
+        self.while_labels += 1
+        ret = [f"label WHILE_START{label_num}"]
         ret.extend(self.compile_expression(while_s.expression))
         ret.append("not")
-        ret.append(f"if-goto WHILE_END{self.while_labels}")
+        ret.append(f"if-goto WHILE_END{label_num}")
         ret.extend(self.compile_statements(while_s.statements))
-        ret.append(f"goto WHILE_START{self.while_labels}")
-        ret.append(f"label WHILE_END{self.while_labels}")
-        self.while_labels += 1
+        ret.append(f"goto WHILE_START{label_num}")
+        ret.append(f"label WHILE_END{label_num}")
         return ret
     
     def compile_let(self, let_s: LetStatement) -> list[str]:
