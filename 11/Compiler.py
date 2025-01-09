@@ -224,13 +224,17 @@ class Compiler:
             subroutineName, symbol = self.get_subroutine_name(term.tokens[:i-1])
             ret = []
             method = 0
-            if symbol:
+            if symbol and symbol.name != self.className:
                 method = 1 # methods have "this" argument as well as the ExpressionList
                 ret.append(self.push(symbol.kind, symbol.index))
             ret.extend(self.compile_expressionList(exps))
             ret.append(f"call {subroutineName} {exps.number_of_expressions()+method}")
         elif term.termType == TERM_TYPE_STRING:
-            pass # TODO now
+            string = term.tokens[0].token
+            ret = [self.push("constant", len(string)), "call String.new 1"]
+            for c in string:
+                ret.append(self.push("constant", ord(c)))
+                ret.append("call String.appendChar 2")
         elif term.termType == TERM_TYPE_VAR_W_EXP:
             pass # TODO now
         else:

@@ -35,7 +35,8 @@ class SymbolTable:
         """
         generates the symbol table for the all scopes
         """
-        self.class_scope.append(Symbol(self.tokens[1].token, "className", CLASS_KIND, 0))
+        className = self.tokens[1].token
+        self.class_scope.append(Symbol(className, className, CLASS_KIND, 0))
         for token in self.tokens[3:-1]:
             if type(token) is ClassVarDec:
                 self.class_scope.extend(self.new_symbols(token))
