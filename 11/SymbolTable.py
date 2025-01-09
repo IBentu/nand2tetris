@@ -5,7 +5,6 @@ CLASS_KIND = "pointer"
 STATIC_KIND = "static"
 FIELD_KIND = "this"
 
-SUBROUTINE_KIND = "subroutine"
 ARG_KIND = "argument"
 VAR_KIND = "local"
 
@@ -78,7 +77,7 @@ class SymbolTable:
                 ret.append(Symbol(token.token, symbol_type, kind, self.count_kind(kind)+len(ret)))
         elif type(token) is SubroutineDec:
             tokens = token.header_tokens
-            ret.append(Symbol(tokens[2].token, tokens[1].token, SUBROUTINE_KIND, self.count_kind(SUBROUTINE_KIND))) # currently symbol type is subroutine return type, maybe will change
+            ret.append(Symbol(tokens[2].token, tokens[1].token, tokens[0].token, 0))
         elif type(token) is ParameterList:
             tokens = token.tokens
             if len(tokens):

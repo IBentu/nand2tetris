@@ -1,4 +1,4 @@
-from SymbolTable import SymbolTable, VAR_KIND, Symbol, FIELD_KIND
+from SymbolTable import SymbolTable, VAR_KIND, Symbol, FIELD_KIND, CLASS_KIND
 from Term import Term, TERM_TYPE_CALL, TERM_TYPE_EXP, TERM_TYPE_INT, \
                  TERM_TYPE_KEYWORD,TERM_TYPE_STRING,TERM_TYPE_UNARY_OP, \
                  TERM_TYPE_VAR,TERM_TYPE_VAR_W_EXP
@@ -106,36 +106,38 @@ class Compiler:
     
     def compile_do(self, do_s: DoStatement) -> list[str]:
         exps = do_s.getExpressionList()
-        subroutineName, symbol = self.get_subroutine_name(do_s.getSubroutineNameTokens())
+        subroutineName, symbol, method = self.get_subroutine_name(do_s.getSubroutineNameTokens())
         ret = []
-        method = 0
-        if symbol and symbol.name != self.className:
-            method = 1
+        if method:
             ret.append(self.push(symbol.kind, symbol.index))
         ret.extend(self.compile_expressionList(exps))
-        ret.append(f"call {subroutineName} {exps.number_of_expressions()+method}")
+        ret.append(f"call {subroutineName} {exps.number_of_expressions()+int(method)}")
         # since do does not expect anything to return, 
         # we need to pop the stack because call ALWAYS has a return value at the top of the stack
         ret.append(self.pop("temp", 0))
         return ret
     
-    def get_subroutine_name(self, subroutineNameTokens: list) -> tuple[str, Optional[Symbol]]:
+    def get_subroutine_name(self, subroutineNameTokens: list) -> tuple[str, Optional[Symbol], bool]:
         """
         return the subroutineName (className.subroutineName) and: None if it's function
+        the returned boolean indicates if the subroutine is a method
         """
         if len(subroutineNameTokens) == 1:
                 # subroutineName
-                return f"{self.className}.{subroutineNameTokens[0].token}", self.symbol_table.get_symbol(self.className)
+                subroutineName = subroutineNameTokens[0].token
+                symbol = self.symbol_table.get_symbol(self.className)
+                subroutine = self.symbol_table.get_symbol(subroutineName)
+                return f"{self.className}.{subroutineName}", symbol, subroutine.kind == "method"
         else:
             try:
                 # varName.subroutineName
                 var = self.symbol_table.get_symbol(subroutineNameTokens[0].token, self.curr_subroutine)
                 if var.symbol_type in BUILTIN_TYPES:
                     raise TypeError(f"builtin type '{var.symbol_type}' does not have methods")
-                return f"{var.symbol_type}.{subroutineNameTokens[2].token}", var
+                return f"{var.symbol_type}.{subroutineNameTokens[2].token}", var, var.kind != CLASS_KIND
             except:
                 # className.subroutineName
-                return "".join(map(lambda x: x.token, subroutineNameTokens)), None
+                return "".join(map(lambda x: x.token, subroutineNameTokens)), None, False
         
 
     def compile_if(self, if_s: IfStatement) -> list[str]:
@@ -233,14 +235,12 @@ class Compiler:
                 if type(t) is ExpressionList:
                     exps = t
                     break
-            subroutineName, symbol = self.get_subroutine_name(term.tokens[:i-1])
+            subroutineName, symbol, method = self.get_subroutine_name(term.tokens[:i-1])
             ret = []
-            method = 0
-            if symbol and symbol.name != self.className:
-                method = 1 # methods have "this" argument as well as the ExpressionList
+            if method:
                 ret.append(self.push(symbol.kind, symbol.index))
             ret.extend(self.compile_expressionList(exps))
-            ret.append(f"call {subroutineName} {exps.number_of_expressions()+method}")
+            ret.append(f"call {subroutineName} {exps.number_of_expressions()+int(method)}")
         elif term.termType == TERM_TYPE_STRING:
             string = term.tokens[0].token
             ret = [self.push("constant", len(string)), "call String.new 1"]
