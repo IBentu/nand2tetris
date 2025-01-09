@@ -109,7 +109,7 @@ class Compiler:
         subroutineName, symbol = self.get_subroutine_name(do_s.getSubroutineNameTokens())
         ret = []
         method = 0
-        if symbol:
+        if symbol and symbol.name != self.className:
             method = 1
             ret.append(self.push(symbol.kind, symbol.index))
         ret.extend(self.compile_expressionList(exps))
@@ -169,9 +169,21 @@ class Compiler:
         return ret
     
     def compile_let(self, let_s: LetStatement) -> list[str]:
-        ret = self.compile_expression(let_s.value)
         var = self.symbol_table.get_symbol(let_s.varName.token, self.curr_subroutine)
-        ret.append(self.pop(var.kind, var.index))
+        if let_s.index is None:
+            ret = self.compile_expression(let_s.value)
+            ret.append(self.pop(var.kind, var.index))
+        else:
+            ret = self.compile_expression(let_s.index)
+            ret.append(self.push(var.kind, var.index))
+            ret.append("add")
+            # the following weird use of the temp segment is incase the expression uses the "that" segment,
+            # we need to evaluate it before popping to pointer 1 
+            ret.extend(self.compile_expression(let_s.value))
+            ret.append(self.pop("temp" , 0))
+            ret.append(self.pop("pointer", 1))
+            ret.append(self.push("temp", 0))
+            ret.append(self.pop("that", 0))
         return ret
 
     def compile_expressionList(self, exps: ExpressionList) -> list[str]:
@@ -236,7 +248,12 @@ class Compiler:
                 ret.append(self.push("constant", ord(c)))
                 ret.append("call String.appendChar 2")
         elif term.termType == TERM_TYPE_VAR_W_EXP:
-            pass # TODO now
+            ret = self.compile_expression(term.tokens[2])
+            var = self.symbol_table.get_symbol(term.tokens[0].token, self.curr_subroutine)
+            ret.append(self.push(var.kind, var.index))
+            ret.append("add")
+            ret.append(self.pop("pointer", 1))
+            ret.append(self.push("that", 0))
         else:
             raise TypeError("invalid term type")
         return ret
