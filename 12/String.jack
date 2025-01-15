@@ -87,15 +87,16 @@ class String {
         // 5. return val
         var boolean neg;
         var int val, digit, i;
+        var char curr;
         let val = 0;
-        if (String.isDigit(charAt(0))) { // if the first char is a digit (i.e. '-') than the value is not negative
-            let neg = false; 
-            let i = 0; 
-        } else {
+        if (charAt(0) = 45) { // if the first char is 45 (i.e. '-') than the value is negative
             let neg = true;
             let i = 1; // if the number of negative the first digit is at index 1
+        } else {
+            let neg = false; 
+            let i = 0; 
         }
-        while (i < len) {
+        while ((i < len) & String.isDigit(charAt(i))) {
             let digit = String.char2int(charAt(i)); // convert from ascii representation of digit
             let val = (10*val)+digit;
             let i = i+1;
