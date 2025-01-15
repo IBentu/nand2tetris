@@ -19,10 +19,18 @@
 class Output {
 
     // Character map for displaying characters
-    static Array charMaps; 
+    static Array charMaps;
+    static Array screen;
+    static int cursor_x;
+    static int cursor_y;
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
+        do Output.initMap();
+        let screen = 16384; // 64x23 frames. each frame 8x11
+        let cursor_x = 0;
+        let cursor_y = 0;
+        return;
     }
 
     // Initializes the character map array
@@ -178,30 +186,79 @@ class Output {
     /** Moves the cursor to the j-th column of the i-th row,
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
+        if ((i > 63) | (i < 0) | (j > 22) | (j < 0)) {
+            do Sys.error(20); // illegal curser position
+        }
+        let cursor_x = i;
+        let cursor_y = j;
+        do Output.drawChar(32); // this is " " so the frame will clear
+        return;
     }
 
     /** Displays the given character at the cursor location,
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
-        // Your implementation should be as efficient as possible.
-        // For example, you can draw multiple pixels at once, for each row.
+        do Output.drawChar(c);
+        if (cursor_x = 63) {
+            do Output.println();
+        } else {
+            do Output.moveCursor(cursor_x+1, cursor_y);
+        }
+        return;
+    }
+
+    /**  Displays the given character at the cursor location */
+    function void drawChar(char c) {
+        var Array charMap;
+        var int i, address;
+        let charMap = Output.getMap(c);
+        let address = (cursor_y*11*32) + (cursor_x/2);
+        let i = 0;
+        while (i < 11) {
+            let screen[address] = charMap[i];
+            let address = address + 32; // advance the address by a single row of pixels
+            let i = i+1;
+        }
+        return;
     }
 
     /** displays the given string starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printString(String s) {
+        var int i;
+        let i = 0;
+        while (i < s.length()) {
+            do Output.printChar(s.charAt(i));
+        }
+        return;
     }
 
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
+        var String str;
+        let str = String.new(6); // largest possible 16b int is 5 digits, and can be negative
+        do str.setInt(i);
+        do Output.printString(str);
+        do str.dispose();
+        return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
+        if (cursor_y = 22) {
+            do Output.moveCursor(0, 0);
+        } else {
+            do Output.moveCursor(0, cursor_y+1);
+        }
+        return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
+        if (cursor_x > 0) {
+            do Output.moveCursor(cursor_x-1, cursor_y);
+        }
+        return;
     }
 }
