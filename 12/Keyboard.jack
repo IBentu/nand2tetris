@@ -8,8 +8,11 @@
  * A library for handling user input from the keyboard.
  */
 class Keyboard {
+        static int address; 
         /** Initializes the keyboard. */
         function void init() {
+            let address = 24576; // set the address of the the keyboard register
+            return;
         } 
 
         /**
@@ -33,7 +36,7 @@ class Keyboard {
          * F1 - F12 = 141 - 152
          */
         function char keyPressed() {
-            // Uses Memory.peek
+            return Memory.peek(address);
         }
 
         /**								
@@ -51,6 +54,15 @@ class Keyboard {
             // 5. display c at the current cursor location
             // 6. advance the cursor
             // 7. return c
+            var char c;
+            // printing something than deleting it just to display the curser
+            do Output.printChar(46); // this is "."
+            do Output.backSpace();
+            while (Keyboard.keyPressed() = 0) {}
+            let c = Keyboard.keyPressed();
+            while (~(Keyboard.keyPressed() = 0)) {}
+            do Output.printChar(c);
+            return c;
         }
 
         /**								
@@ -60,22 +72,24 @@ class Keyboard {
          * is longer than a single character.
          */
         function String readLine(String message) {
-            // This should behave exactly like the built-in OS.
-            // You can assume input is at most 64 characters long.
-            // Why? Because this is the width of our screen!
-            // Pseudocode:
-            // 1. printString(message)
-            // 2. let str = ""
-            // 3. while true
-            // 4.   let c = readChar()
-            // 5.   if (c = newLine)
-            // 6.      display newLine (if not displayed already by readChar())
-            // 7.      return str
-            // 8.   else if (c = backSpace)
-            // 9.      remove the last character from str, if possible
-            // 10.     move the cursor accordingly
-            // 11.  else
-            // 12.    str.appendChar(c)
+            var String str;
+            var char key;
+            do Output.printString(message);
+            let str = String.new(64);
+            while (true) {
+                let key = Keyboard.readChar();
+                if (key = String.newLine()) {
+                    do Output.println();
+                    return str;
+                }
+                if ((key = String.backSpace()) & (str.length() > 0)) {
+                    do Output.backSpace();
+                    do str.eraseLastChar();
+                } else { if (str.length() < 64) {
+                    do str.appendChar(key);
+                }}
+            }
+            return str;
         }     
 
         /**								
@@ -85,6 +99,8 @@ class Keyboard {
          * entered text is detected). Also handles user backspaces. 
          */
         function int readInt(String message) {
-            // This should behave exactly like the built-in OS.
+            var String intStr;
+            let intStr = Keyboard.readLine(message);
+            return intStr.intValue();
         }
 }
