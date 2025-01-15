@@ -73,7 +73,7 @@ class Math {
             var boolean neg_x, neg_y;
             var int abs_div;
             if (y = 0) {
-                do Sys.error(3) // division by 0 error
+                do Sys.error(3); // division by 0 error
             }
             if (x = 0) {
                 return 0;
@@ -99,20 +99,44 @@ class Math {
             return abs_div;
         }
 
-        // this functino asssumes x>0, y>0
+        // this function asssumes x>0 and y>0
         function int divide_abs(int x, int y) {
-            // TODO: FIX, doesn't pass test
-            var int q;
+            var int q, twoY, tmp;
             if ((y > x) | (y < 0)) { // the second condition is for overflow
                 return 0;
             }
-            let q = Math.divide(x, y+y); 
-            // q = x/2y = { x/2y     , x even
-            //            { (x-1)/2y , x odd
-            // -> 2*q*y = { x        , x even
-            //            { x-1      , x odd
-            // -> x-2*q*y = x%2
-            if (Math.bit(x, 0) < y) {  
+            if (x = y) {
+                return 1;
+            }
+            let twoY = y+y; 
+            let q = Math.divide(x, twoY); 
+            /* 
+            DOESN'T WORK
+            q = x/2y =    { 0        , 2y > x
+                          { 1        , 2y = x
+                          { x/2y     , x even
+                          { (x-1)/2y , x odd
+            -> 2*q*y =    { 0        , 2y > x
+                          { x        , 2y = x
+                          { x        , x even
+                          { x-1      , x odd
+            -> x-2*q*y =  { x        , 2y > x
+                          { 0        , 2y = x
+                          { x%2      , else
+            */
+            /*if (twoY > x) {
+                let tmp = x;
+            } else {
+                if (twoY = x) {
+                    let tmp = 0;
+                } else {
+                    let tmp = Math.bit(x, 0);
+                }
+            }
+            if (tmp < y) {  
+                return q+q;
+            }*/
+            if ((x - (q*twoY)) < y) {
                 return q+q;
             }
             return q+q+1;
@@ -120,13 +144,7 @@ class Math {
 
         /** Returns the integer part of the square root of x. */
         function int sqrt(int x) {
-            // This should be implemented without using multiplication or division.
-            // Pseudocode (where '**' is the mathematical power function):
-            // 1. let y = 0
-            // 2. for j = (n/2 - 1) ... 0 do
-            // 3.   if ((y + 2**j)**2 <= x) then let y = y + 2**j
-            // 4. return y
-            var int y, i, tmp;
+            var int y, i, approx, approx_sq;
             if (x < 0) { 
                 do Sys.error(4); // sqrt of negetive number error;
             }
@@ -136,9 +154,10 @@ class Math {
             let y = 0;
             let i = 7; // = 16/2 - 1
             while (i > -1) { 
-                let tmp = y+twoToThe[i];
-                if ((tmp*tmp < x+1) & ~(tmp = 0)) {
-                    let y = tmp;
+                let approx = y+twoToThe[i];
+                let approx_sq = approx*approx;
+                if (~(approx_sq > x) & (approx_sq > 0)) {
+                    let y = approx;
                 }
                 let i = i-1;
             }
