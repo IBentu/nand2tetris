@@ -55,9 +55,6 @@ class Keyboard {
             // 6. advance the cursor
             // 7. return c
             var char c;
-            // printing something than deleting it just to display the curser
-            do Output.printChar(46); // this is "."
-            do Output.backSpace();
             while (Keyboard.keyPressed() = 0) {}
             let c = Keyboard.keyPressed();
             while (~(Keyboard.keyPressed() = 0)) {}
