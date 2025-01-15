@@ -73,7 +73,7 @@ class Math {
             var boolean neg_x, neg_y;
             var int abs_div;
             if (y = 0) {
-                // TODO: raise ERROR
+                do Sys.error(3) // division by 0 error
             }
             if (x = 0) {
                 return 0;
@@ -127,6 +127,12 @@ class Math {
             // 3.   if ((y + 2**j)**2 <= x) then let y = y + 2**j
             // 4. return y
             var int y, i, tmp;
+            if (x < 0) { 
+                do Sys.error(4); // sqrt of negetive number error;
+            }
+            if (x = 0) {
+                return 0;
+            }
             let y = 0;
             let i = 7; // = 16/2 - 1
             while (i > -1) { 
