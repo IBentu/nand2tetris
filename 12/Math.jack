@@ -9,13 +9,35 @@
  * Note: Jack compilers implement multiplication and division using OS method calls.
  */
 class Math {
+        static Array twoToThe; // stores the value of 2^i in the i-th index of the array
+
         /** Initializes the library. */
         function void init() {
+            var int i, b;
+            let twoToThe = Array.new(16);
+            let i = 0;
+            let b = 1;
+            while (i < 16) {
+                let twoToThe[i] = b;
+                let b = b + b;
+                let i = i+1;
+            }
+            return;
         }
 
         /** Returns the absolute value of x. */
         function int abs(int x) {
+            if (x < 0) {
+                return -x;
+            }
+            return x;
         }
+
+        /** returns the i-th bit of x */ 
+        function boolean bit(int x, int i) {
+            return ~((x & twoToThe[i]) = 0); // (x and 2^i) = 0 only if the i-th bit in x is 0
+        }
+
 
         /** 
          * Returns the product of x and y. 
@@ -24,14 +46,21 @@ class Math {
          * the Jack expressions x*y and multiply(x,y) return the same value.
          */
         function int multiply(int x, int y) {
-            // Pseudocode:
-            // 1. let sum = 0
-            // 2. let shiftedx = x
-            // 3. for i = 0 ... n-1 do
-            // 4.   if ((i-th bit of y) == 1)
-            // 5.      let sum = sum + shiftedx
-            // 6.   let shiftedx = 2*shiftedx
-            // 7. return sum
+            var int sum, shiftedX, i;
+            if ((x = 0) | (y = 0)) {
+                return 0;
+            }
+            let shiftedX = x;
+            let sum = 0;
+            let i = 0;
+            while (i < 16) { // only need to shift MSB times
+                if (Math.bit(y, i)) {
+                    let sum = sum + shiftedX;
+                }
+                let shiftedX = shiftedX + shiftedX;
+                let i = i+1;
+            }
+            return sum;
         }
 
         /** 
@@ -41,16 +70,52 @@ class Math {
          * the Jack expressions x/y and divide(x,y) return the same value.
          */
         function int divide(int x, int y) {
-            // This should be implemented without using multiplication.
-            // Hint: updating the value of 2*q*y in the "if" statement requires
-            // at most a single addition operator at every recursion step.
-            // Pseudocode:
-            // 1. if (y > x) return 0
-            // 2. let q = divide(x, 2*y)
-            // 3. if ((x - 2*q*y) < y)
-            // 4.   return 2*q
-            // 5. else
-            // 6.   return 2*q + 1
+            var boolean neg_x, neg_y;
+            var int abs_div;
+            if (y = 0) {
+                // TODO: raise ERROR
+            }
+            if (x = 0) {
+                return 0;
+            }
+            if (x > 0) {
+                let neg_x = false;
+            } else {
+                let neg_x = true;
+            }
+            if (y > 0) {
+                let neg_y = false;
+            } else {
+                let neg_y = true;
+            }
+            let abs_div = Math.divide_abs(Math.abs(x), Math.abs(y));
+            if (neg_x & neg_y) {
+                return abs_div;
+            } else {
+                if (neg_x | neg_y) {
+                    return -abs_div;
+                }
+            }
+            return abs_div;
+        }
+
+        // this functino asssumes x>0, y>0
+        function int divide_abs(int x, int y) {
+            // TODO: FIX, doesn't pass test
+            var int q;
+            if ((y > x) | (y < 0)) { // the second condition is for overflow
+                return 0;
+            }
+            let q = Math.divide(x, y+y); 
+            // q = x/2y = { x/2y     , x even
+            //            { (x-1)/2y , x odd
+            // -> 2*q*y = { x        , x even
+            //            { x-1      , x odd
+            // -> x-2*q*y = x%2
+            if (Math.bit(x, 0) < y) {  
+                return q+q;
+            }
+            return q+q+1;
         }
 
         /** Returns the integer part of the square root of x. */
@@ -61,13 +126,34 @@ class Math {
             // 2. for j = (n/2 - 1) ... 0 do
             // 3.   if ((y + 2**j)**2 <= x) then let y = y + 2**j
             // 4. return y
+            var int y, i, tmp;
+            let y = 0;
+            let i = 7; // = 16/2 - 1
+            while (i > -1) { 
+                let tmp = y+twoToThe[i];
+                if ((tmp*tmp < x+1) & ~(tmp = 0)) {
+                    let y = tmp;
+                }
+                let i = i-1;
+            }
+            return y;
         }
 
         /** Returns the greater number. */
         function int max(int a, int b) {
+            if (a > b) {
+                return a;
+            } else {
+                return b;
+            }
         }
 
         /** Returns the smaller number. */
         function int min(int a, int b) {
+            if (a > b) {
+                return b;
+            } else {
+                return a;
+            }
         }
 }
