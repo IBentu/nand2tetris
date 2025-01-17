@@ -17,7 +17,7 @@
  * as a small filled square, indicates where the next character will be displayed.
  */
 class Output {
-
+    // TODO DEBUG
     // Character map for displaying characters
     static Array charMaps;
     static Array screen;

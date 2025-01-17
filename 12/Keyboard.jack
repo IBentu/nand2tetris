@@ -55,7 +55,7 @@ class Keyboard {
             // 6. advance the cursor
             // 7. return c
             var char c;
-            do Output.printChar(0); // display the cursor
+            do Output.drawChar(0); // display the cursor
             while (Keyboard.keyPressed() = 0) {}
             let c = Keyboard.keyPressed();
             while (~(Keyboard.keyPressed() = 0)) {}
@@ -70,6 +70,7 @@ class Keyboard {
          * is longer than a single character.
          */
         function String readLine(String message) {
+            // TODO DEBUG
             var String str;
             var char key;
             do Output.printString(message);
@@ -81,7 +82,6 @@ class Keyboard {
                     return str;
                 }
                 if ((key = String.backSpace()) & (str.length() > 0)) {
-                    do Output.backSpace();
                     do str.eraseLastChar();
                 } else { if (str.length() < 64) {
                     do str.appendChar(key);

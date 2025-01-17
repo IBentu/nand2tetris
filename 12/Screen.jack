@@ -11,6 +11,7 @@
  * the screen is indexed (0,0).
  */
 class Screen {
+    // TODO DEBUG
         static Array screen;
         static boolean color;
 
