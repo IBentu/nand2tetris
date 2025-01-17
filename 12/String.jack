@@ -12,18 +12,19 @@
  * string-oriented operations.
  */
 class String {
-
+    // TODO DEBUG
     field int maxLen;
     field int len;
     field Array ptr;
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
     constructor String new(int maxLength) {
-        var Array ptr;
         if (maxLength < 0) {
             do Sys.error(14); // length must be non-negetive
         }
-        let ptr = Memory.alloc(maxLength);
+        if (maxLength > 0) {
+            let ptr = Array.new(maxLength);
+        }
         let maxLen = maxLength;
         let len = 0;
         return this;
@@ -31,7 +32,10 @@ class String {
 
     /** Disposes this string. */
     method void dispose() {
-        do ptr.dispose();
+        if (maxLen > 0) {
+            do ptr.dispose();
+        }
+        do Memory.deAlloc(this);
         return;
     }
 
@@ -70,7 +74,7 @@ class String {
     /** Erases the last character from this string. */
     method void eraseLastChar() {
         if (len = 0) {
-            do Sys.error(17); // string is empty
+            do Sys.error(18); // string is empty
         }
         let len = len-1;
         return;
@@ -96,10 +100,15 @@ class String {
             let neg = false; 
             let i = 0; 
         }
-        while ((i < len) & String.isDigit(charAt(i))) {
-            let digit = String.char2int(charAt(i)); // convert from ascii representation of digit
-            let val = (10*val)+digit;
-            let i = i+1;
+        while (i < len) {
+            let curr = ptr[i];
+            if (String.isDigit(curr)) {
+                let digit = String.char2int(curr); // convert from ascii representation of digit
+                let val = (10*val)+digit;
+                let i = i+1;
+            } else {
+                let i = len;
+            }
         }
         if (neg) {
             return -val;
