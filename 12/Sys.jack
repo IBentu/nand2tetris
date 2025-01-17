@@ -29,13 +29,17 @@ class Sys {
 
     /** Waits approximately duration milliseconds and returns.  */
     function void wait(int duration) {
-        var int i, MS_DELAY;
+        var int i, j, MS_DELAY;
         if (duration < 0) {
             do Sys.error(1);
         }
-        let MS_DELAY = 220;
+        let MS_DELAY = 450;
         let i = 0;
-        while (i < duration * MS_DELAY) {
+        while (i < duration) {
+            let j = 0;
+            while (j < MS_DELAY) {
+                let j = j+1;
+            }
             let i = i+1;
         }
         return;
