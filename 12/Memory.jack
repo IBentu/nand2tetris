@@ -11,25 +11,41 @@
  * consists of 32,768 words, each holding a 16-bit binary number.
  */ 
 class Memory {
+    static Array RAM;
+    static Array freeList;
+
+
     /** Initializes the class. */
     function void init() {
         // Pseudocode:
         // 1. freeList = heapBase
         // 2. freeList.length = heapLength
         // 3. freeList.next = null
+        let RAM = 0;
+        let freeList = 2048; // heap base is at 2048
+        let freeList[0] = 14335; // heap length, heap endus at 16383
+        let freeList[1] = 0; // next
+        return;
     }
 
     /** Returns the RAM value at the given address. */
     function int peek(int address) {
+        return RAM[address];
     }
 
     /** Sets the RAM value at the given address to the given value. */
     function void poke(int address, int value) {
+        let RAM[address] = value;
+        return;
     }
 
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. Assume size > 0. */
     function int alloc(int size) {
+        var Array curr, last;
+        if (~(size > 0)) {
+            do Sys.error(5); // size must be positive
+        } 
         // Pseudocode:
         // 1. Search freeList using best-fit or first-fit heuristics to obtain
         //    a segment with segment.length > size.
@@ -41,21 +57,64 @@ class Memory {
         // 5. Return block
         // The figure MemoryTest/MemoryFreeListExample.png illustrates how
         // the freeList should look like.
+        let last = freeList;
+        if (freeList[0] > size+2) {
+            let freeList[size+1] = freeList[0]-size+1; // update size
+            let freeList[size+2] = freeList[1]; // move the next segment address to new freeList base
+            let freeList = freeList+size+1; // move freeList pointer
+            let last[0] = size+1; // write segment size
+            return last+1; // return pointer
+        }
+        let curr = freeList[1];
+        while(~(curr[1]=0)) {
+            if (curr[0] = size+1) {
+                let last[1] = curr[1];
+                return curr+1;
+            }
+            // if curr[0] == size+2 the leftover block will have only 1 register which is not enough for size + pointer
+            if (curr[0] > size+2) {
+                let curr[size+1] = curr[0]-size+1; // write new size
+                let curr[size+2] = curr[1]; // move the next segment address to the new base+1
+                let curr[0] = size+1; // update allocated block size
+                let last[1] = curr+size+1; // change last pointer to new segment
+                return curr+1; // return pointer
+            }
+            let last = curr;
+            let curr = curr[1];
+        }
+        if (curr[0] = size+1) {
+            let last[1] = 0;
+            return curr+1;
+        } else { if (curr[0] > size+2) {
+            let curr[size+1] = curr[0]-size+1; // write new size
+            let curr[size+2] = 0; // move the next segment address to the new base+1
+            let curr[0] = size+1; // update allocated block size
+            let last[1] = curr+size+1; // change last pointer to new segment
+            return curr+1; // return pointer
+        }}
+        return -1; // TODO: ask - shouldn't we 'do Sys.error(6);'?
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
-        // Pseudocode:
-        // 1. segment = o - 1
-        // 2. Insert segment into the freeList
+        let o = o-1;
+        let o[1] = freeList;
+        let freeList = o;
+        return;
     }    
 
     /** Returns the maximal element contained in the given Array/object. 
      *  Assume inputs are initialized and contain at least one element. */
     function int max(Array o) {
-        // Hint: the algorithm you need to implement in Memory.alloc saves the
-        // size of the allocated block in the memory cell right before the 
-        // start of the block, and this can be used to implement Memory.max.
+        var int maxNum, i;
+        let o = o-1; // length of array is stored at o[-1]
+        let maxNum = o[1];
+        let i = 2;
+        while (i < o[0]) {
+            let maxNum = Math.max(maxNum, o[i]);
+            let i = i+1;
+        }
+        return maxNum;
     }
 }
