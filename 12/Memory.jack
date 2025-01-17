@@ -17,10 +17,6 @@ class Memory {
 
     /** Initializes the class. */
     function void init() {
-        // Pseudocode:
-        // 1. freeList = heapBase
-        // 2. freeList.length = heapLength
-        // 3. freeList.next = null
         let RAM = 0;
         let freeList = 2048; // heap base is at 2048
         let freeList[0] = 14335; // heap length, heap endus at 16383
@@ -45,18 +41,7 @@ class Memory {
         var Array curr, last;
         if (~(size > 0)) {
             do Sys.error(5); // size must be positive
-        } 
-        // Pseudocode:
-        // 1. Search freeList using best-fit or first-fit heuristics to obtain
-        //    a segment with segment.length > size.
-        //    If no such segment is found, return -1.
-        // 2. block = needed part of the found segment (or all of it, if the 
-        //            segment remainder is too small).
-        // 3. block[-1] = size + 1 // Remember block size, for de-allocation
-        // 4. Update freeList to reflect the allocation
-        // 5. Return block
-        // The figure MemoryTest/MemoryFreeListExample.png illustrates how
-        // the freeList should look like.
+        }
         let last = freeList;
         if (freeList[0] > size+2) {
             let freeList[size+1] = freeList[0]-size+1; // update size
