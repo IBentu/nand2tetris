@@ -11,34 +11,56 @@
  * the screen is indexed (0,0).
  */
 class Screen {
+        static Array screen;
+        static boolean color;
+        static Array twoToThe; // stores the value of 2^i in the i-th index of the array
+
+
         /** Initializes the Screen. */
         function void init() {
+            var int i, b;
+            let screen = 16384; // base location of screen memory
+            do Screen.clearScreen();
+            do Screen.setColor(true);
+            let twoToThe = Array.new(16);
+            let i = 0;
+            let b = 1;
+            while (i < 16) {
+                let twoToThe[i] = b;
+                let b = b + b;
+                let i = i+1;
+            }
+            return;
         }
 
         /** Erases the entire screen. */
         function void clearScreen() {
+            var int i;
+            let i = 0;
+            while (i < 8192) {
+                let screen[i] = 0;
+                let i = i+1;
+            }
+            return;
         }
 
         /** Sets the current color, to be used for all subsequent drawXXX commands.
          *    Black is represented by true, white by false. */
         function void setColor(boolean b) {
+            let color = b;
         }
 
         /** Draws the (x,y) pixel, using the current color. */
         function void drawPixel(int x, int y) {
-            // For this function, you will need to calculate the value x%16.
-            // It should be calculated quickly without using multiplication or
-            // division, using exactly one basic math/logical operation.
-            // In addition, calculating 16384 + y * 32 + x/16 should not use
-            // division or multiplication.
-            // Pseudocode:
-            // 1. Compute the RAM address where the (x,y) pixel is
-            //    represented: 16384 + (32*y) + (x/16).
-            // 2. Use Memory.peek to get the 16-bit value of this address
-            // 3. Use some bitwise operation to set (only) the bit that corresponds
-            //    to the pixel to the current color.
-            // 4. Use Memory.poke to write the modified 16-bit value to the RAM
-            // address.
+            var int xmod16, address;
+            let xmod16 = (x & 15);
+            let address = (^(^(^(^(^y))))) + (#(#(#(#x)))); // since 16 and 32 are powers of 2 we an use shifts for the division and multiplication
+            if (color) {
+                let screen[address] = (screen[address] | (twoToThe[xmod16])); // or with 0001000...0 guarantees the required bit is on  
+            } else {
+                let screen[address] = (screen[address] & (~(twoToThe[xmod16])));// and with 1111011...1 guarantees the required bit is off
+            }
+            return;
         }
 
         /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
