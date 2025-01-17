@@ -187,11 +187,11 @@ class Output {
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
         if ((i > 63) | (i < 0) | (j > 22) | (j < 0)) {
-            do Sys.error(20); // illegal curser position
+            do Sys.error(20); // illegal cursor position
         }
         let cursor_x = i;
         let cursor_y = j;
-        do Output.drawChar(32); // this is " " so the frame will clear
+        do Output.drawChar(0); // this is a black square - the cursor
         return;
     }
 
@@ -256,9 +256,12 @@ class Output {
 
     /** Moves the cursor one column back. */
     function void backSpace() {
+        do Output.drawChar(32); // clear current space
         if (cursor_x > 0) {
             do Output.moveCursor(cursor_x-1, cursor_y);
-        }
+        } else { if (cursor_y > 0) {
+            do Output.moveCursor(63, cursor_y-1);
+        }}
         return;
     }
 }

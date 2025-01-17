@@ -55,6 +55,7 @@ class Keyboard {
             // 6. advance the cursor
             // 7. return c
             var char c;
+            do Output.printChar(0); // display the cursor
             while (Keyboard.keyPressed() = 0) {}
             let c = Keyboard.keyPressed();
             while (~(Keyboard.keyPressed() = 0)) {}
