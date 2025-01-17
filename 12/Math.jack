@@ -25,6 +25,13 @@ class Math {
             return;
         }
 
+        function int GetTwoToThe(int i) {
+            if ((i < 0) | (i > 15)) {
+                return 0;
+            }
+            return twoToThe[i];
+        }
+
         /** Returns the absolute value of x. */
         function int abs(int x) {
             if (x < 0) {
@@ -109,7 +116,7 @@ class Math {
                 return 1;
             }
             let twoY = y+y; 
-            let q = Math.divide(x, twoY); 
+            let q = Math.divide_abs(x, twoY); 
             /* 
             DOESN'T WORK
             q = x/2y =    { 0        , 2y > x
