@@ -203,6 +203,19 @@ class Screen {
             // 1. for (dy = -r ... r)
             // 2.   let halfWidth = sqrt(r*r - dy*dy)
             // 3.   do drawLine(x-halfWidth, y+dy, x+halfWidth, y+dy)
+            var int halfWidth, dy, r_sq;
+            if (Screen.outOfBounds(x, y)) {
+                do Sys.error(12); // illegal center coords
+            }
+            if (Screen.outOfBounds(x+r, y) | Screen.outOfBounds(x-r, y) | Screen.outOfBounds(x, y+r) | Screen.outOfBounds(x, y-r)) {
+                do Sys.error(13); // illegal radius
+            }
+            let dy = -r;
+            let r_sq = r*r;
+            while (~(dy > r)) {
+                let halfWidth = Math.sqrt(r_sq-(dy*dy));
+                do Screen.drawLine(x-halfWidth, y+dy, x+halfWidth, y+dy);
+            }
             return;
         }
 }
