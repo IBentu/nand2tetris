@@ -55,7 +55,6 @@ class Screen {
             let xmod16 = (x & 15);
             let address = (^(^(^(^(^y))))) + (#(#(#(#x)))); // since 16 and 32 are powers of 2 we can use shifts for the division and multiplication
             if (color) {
-                // TODO: ask will my OS files be tested together? can I create internal functions
                 let screen[address] = (screen[address] | (Math.GetTwoToThe(xmod16))); // or with 0001000...0 guarantees the required bit is on  
             } else {
                 let screen[address] = (screen[address] & (~(Math.GetTwoToThe(xmod16))));// and with 1111011...1 guarantees the required bit is off
