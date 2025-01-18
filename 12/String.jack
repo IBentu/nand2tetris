@@ -12,7 +12,6 @@
  * string-oriented operations.
  */
 class String {
-    // TODO DEBUG
     field int maxLen;
     field int len;
     field Array ptr;
@@ -46,7 +45,7 @@ class String {
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
-        if ((j > len-1) | (j < 0)) {
+        if (((j < 0) | (j > len)) | (j = len)) {
             do Sys.error(15); // index out of bounds
         }
         return ptr[j];
@@ -54,7 +53,7 @@ class String {
 
     /** Sets the character at the j-th location of this string to c. */
     method void setCharAt(int j, char c) {
-        if ((j > len-1) | (j < 0)) {
+        if (((j < 0) | (j > len)) | (j = len)) {
             do Sys.error(16); // index out of bounds
         }
         let ptr[j] = c;
@@ -79,7 +78,6 @@ class String {
         let len = len-1;
         return;
     }
-
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
@@ -100,7 +98,7 @@ class String {
             let neg = false; 
             let i = 0; 
         }
-        while (i < len) {
+        while ((i < len)) {
             let curr = ptr[i];
             if (String.isDigit(curr)) {
                 let digit = String.char2int(curr); // convert from ascii representation of digit
@@ -111,13 +109,15 @@ class String {
             }
         }
         if (neg) {
-            return -val;
+            let val = -val;
         }
         return val;
     }
-
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
+        if (maxLen = 0) {
+            do Sys.error(19);
+        }
         let len = 0; // empty the string
         if (val = 0) {
             do appendChar(48); // append '0'
@@ -130,13 +130,13 @@ class String {
         do setIntAbs(val);
         return;
     }
-
     /** Sets this string to hold a representation of the given POSITIVE value. */
     method void setIntAbs(int val) {
+        // TODO DEBUG
         var int remaining;
         var char digit;
         let remaining = val/10;
-        let digit = String.int2char(val - (10*remaining)); // ascii representation of val%10
+        let digit = String.int2char((val - (10*remaining))); // ascii representation of val%10
         if (val < 10) {
             if (len = maxLen) {
                 do Sys.error(19); // insufficient string capacity
