@@ -21,15 +21,15 @@ class Output {
     // Character map for displaying characters
     static Array charMaps;
     static Array screen;
-    static int cursor_x;
-    static int cursor_y;
+    static int curr_col;
+    static int curr_row;
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
         do Output.initMap();
         let screen = 16384; // 64x23 frames. each frame 8x11
-        let cursor_x = 0;
-        let cursor_y = 0;
+        let curr_col = 0;
+        let curr_row = 0;
         return;
     }
 
@@ -186,24 +186,33 @@ class Output {
     /** Moves the cursor to the j-th column of the i-th row,
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
-        if ((i > 63) | (i < 0) | (j > 22) | (j < 0)) {
+        if ((i > 22) | (i < 0) | (j > 63) | (j < 0)) {
             do Sys.error(20); // illegal cursor position
         }
-        let cursor_x = i;
-        let cursor_y = j;
-        do Output.drawChar(0); // this is a black square - the cursor
+        let curr_row = i;
+        let curr_col = j;
+        do Output.drawChar(0); // draws a black square - the cursor
         return;
     }
 
     /** Displays the given character at the cursor location,
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
-        do Output.drawChar(c);
-        if (cursor_x = 63) {
+        if (c = String.newLine()) {
             do Output.println();
         } else {
-            do Output.moveCursor(cursor_x+1, cursor_y);
+            if (c = String.backSpace()) {
+                do Output.backSpace();
+            } else {
+                do Output.drawChar(c);
+                if (curr_col = 63) {
+                    do Output.println();
+                } else {
+                    do Output.moveCursor(curr_row, curr_col+1);
+                }
+            }
         }
+        
         return;
     }
 
@@ -212,7 +221,7 @@ class Output {
         var Array charMap;
         var int i, address;
         let charMap = Output.getMap(c);
-        let address = (cursor_y*11*32) + (cursor_x/2);
+        let address = (curr_row*11*32) + (curr_col/2);
         let i = 0;
         while (i < 11) {
             let screen[address] = charMap[i];
@@ -229,6 +238,7 @@ class Output {
         let i = 0;
         while (i < s.length()) {
             do Output.printChar(s.charAt(i));
+            let i = i+1;
         }
         return;
     }
@@ -246,10 +256,10 @@ class Output {
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
-        if (cursor_y = 22) {
+        if (curr_row = 22) {
             do Output.moveCursor(0, 0);
         } else {
-            do Output.moveCursor(0, cursor_y+1);
+            do Output.moveCursor(curr_row+1, 0);
         }
         return;
     }
@@ -257,11 +267,13 @@ class Output {
     /** Moves the cursor one column back. */
     function void backSpace() {
         do Output.drawChar(32); // clear current space
-        if (cursor_x > 0) {
-            do Output.moveCursor(cursor_x-1, cursor_y);
-        } else { if (cursor_y > 0) {
-            do Output.moveCursor(63, cursor_y-1);
-        }}
+        if (curr_col > 0) {
+            do Output.moveCursor(curr_row, curr_col-1);
+        } else { 
+            if (curr_row > 0) {
+                do Output.moveCursor(curr_row-1, 63);
+            }
+        }
         return;
     }
 }
