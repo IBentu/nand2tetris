@@ -70,22 +70,28 @@ class Keyboard {
          * is longer than a single character.
          */
         function String readLine(String message) {
-            // TODO DEBUG
             var String str;
-            var char key;
+            var char key, backspace, newline;
+            var boolean isNewline;
             do Output.printString(message);
             let str = String.new(64);
-            while (true) {
+            let newline = String.newLine();
+            let backspace = String.backSpace();
+            let isNewline = false;
+            while (~(isNewline)) {
                 let key = Keyboard.readChar();
-                if (key = String.newLine()) {
-                    do Output.println();
-                    return str;
+                let isNewline = (key = newline);
+                if (~isNewline) {
+                    if (key = backspace) {
+                        if (str.length() > 0) {
+                            do str.eraseLastChar();
+                        }
+                    } else { 
+                        if (str.length() < 64) {
+                            do str.appendChar(key);
+                        }
+                    }
                 }
-                if ((key = String.backSpace()) & (str.length() > 0)) {
-                    do str.eraseLastChar();
-                } else { if (str.length() < 64) {
-                    do str.appendChar(key);
-                }}
             }
             return str;
         }     
