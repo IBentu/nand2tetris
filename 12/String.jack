@@ -132,7 +132,6 @@ class String {
     }
     /** Sets this string to hold a representation of the given POSITIVE value. */
     method void setIntAbs(int val) {
-        // TODO DEBUG
         var int remaining;
         var char digit;
         let remaining = val/10;
