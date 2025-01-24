@@ -17,7 +17,6 @@
  * as a small filled square, indicates where the next character will be displayed.
  */
 class Output {
-    // TODO DEBUG
     // Character map for displaying characters
     static Array charMaps;
     static Array screen;
@@ -191,7 +190,6 @@ class Output {
         }
         let curr_row = i;
         let curr_col = j;
-        do Output.drawChar(0); // draws a black square - the cursor
         return;
     }
 
@@ -219,12 +217,23 @@ class Output {
     /**  Displays the given character at the cursor location */
     function void drawChar(char c) {
         var Array charMap;
-        var int i, address;
+        var int i, address, charRow, currAddressMask;
+        var boolean odd_col;
         let charMap = Output.getMap(c);
-        let address = (curr_row*11*32) + (curr_col/2);
+        let address = (^(^(^(^(^(curr_row*11)))))) + (#curr_col);
+        let odd_col = curr_col & 1;
+        if (odd_col) {
+            let currAddressMask = 255; // 0000000011111111
+        } else {
+            let currAddressMask = -256; // 1111111100000000
+        }
         let i = 0;
         while (i < 11) {
-            let screen[address] = charMap[i];
+            let charRow = charMap[i];
+            if (odd_col) {
+                let charRow = ^(^(^(^(^(^(^(^(charRow)))))))); // since the address is two frames (16bit) we need to shift the charMap 8 bits for odd positions
+            }
+            let screen[address] =  (screen[address] & currAddressMask) | charRow; // we want to preserve the frame we don't draw so we need to clear the other frame via the mask and then or the 2bytes with the charRow
             let address = address + 32; // advance the address by a single row of pixels
             let i = i+1;
         }
