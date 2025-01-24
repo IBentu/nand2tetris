@@ -13,13 +13,23 @@
 class Screen {
     // TODO DEBUG
         static Array screen;
+        static Array twoToThe;
         static boolean color;
 
         /** Initializes the Screen. */
         function void init() {
+            var int i, b;
             let screen = 16384; // base location of screen memory
             do Screen.clearScreen();
             do Screen.setColor(true);
+            let twoToThe = Array.new(16);
+            let i = 0;
+            let b = 1;
+            while (i < 16) {
+                let twoToThe[i] = b;
+                let b = b+b;
+                let i = i+1;
+            }
             return;
         }
 
@@ -55,29 +65,16 @@ class Screen {
             let xmod16 = (x & 15);
             let address = (^(^(^(^(^y))))) + (#(#(#(#x)))); // since 16 and 32 are powers of 2 we can use shifts for the division and multiplication
             if (color) {
-                let screen[address] = (screen[address] | (Math.GetTwoToThe(xmod16))); // or with 0001000...0 guarantees the required bit is on  
+                let screen[address] = (screen[address] | twoToThe[xmod16]); // or with 0001000...0 guarantees the required bit is on  
             } else {
-                let screen[address] = (screen[address] & (~(Math.GetTwoToThe(xmod16))));// and with 1111011...1 guarantees the required bit is off
+                let screen[address] = (screen[address] & (~(twoToThe[xmod16])));// and with 1111011...1 guarantees the required bit is off
             }
             return;
         }
 
         /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
         function void drawLine(int x1, int y1, int x2, int y2) {
-            // The case where x1 != x2 and y1 != y2 should be implemented without
-            // multiplication or division.
-            // Pseudocode:
-            // 1. let x = x1, y = y1, a = 0, b = 0, diff = 0
-            // 2. Compute dx and dy
-            // 3. while ((a <= dx) and (b <= dy))
-            // 4.   do drawPixel(x+a, y+b)
-            // 5.   if (diff < 0) { let a=a+1, diff=diff+dy }
-            // 6.   else          { let b=b+1, diff=diff-dx }
-            //
-            // The case where y1 == y2 can be implemented efficiently by
-            // trying to draw as many pixels as possible in a single assignment,
-            // similarly to Fill in project 4.
-            var int x, dx, y, dy, a, b, diff, dx, dy;
+            var int tmp;
             if (Screen.outOfBounds(x1, y1) | Screen.outOfBounds(x2, y2)) {
                 do Sys.error(8); // illegal line coords
             }
@@ -85,62 +82,68 @@ class Screen {
                 do Screen.drawPixel(x1, y1);
                 return;
             }
+            if (x1 > x2) { // x1 will always be the left point
+                let tmp = x1;
+                let x1 = x2;
+                let x2 = tmp;
+                let tmp = y1;
+                let y1 = y2;
+                let y2 = tmp;
+            }
             if (~((y1 = y2) | (x1 = x2))) { // x1 != x2 and y1 != y2
-                let a = 0;
-                let b = 0;
-                let diff = 0;
-                let x = Math.min(x1, x2);
-                let dx = Math.max(x1, x2) - x;
-                if (((x1 < x2 ) & (y1 < y2)) | ((x1 > x2) & (y1 > y2))) {
-                    // northeast direction (/) => southeast on screen (\)
-                    let y = Math.min(y1, y2);
-                    let dy = Math.max(y1, y2) - y;
-                    while (~((a > dx) | (b > dy))) { // a <= dx and b <= dy
-                        do Screen.drawPixel(x+a, y+b);
-                        if (diff < 0) { // b/a > dy/dx -> diff = a*dy-b*dx < 0
-                            let a = a+1;
-                            let diff = diff+dy;
-                        } else {
-                            let b = b+1;
-                            let diff = diff-dx;
-                        }
-                    }
-                } else {
-                    // southeast direction (\) => northeast on screen (/)
-                    let y = Math.max(y1, y2);
-                    let dy = Math.min(y1, y2) - y; // dy < 0
-                    while(~((a > dx) | (b > -dy))) { // a <= dx and b <= -dy
-                        do Screen.drawPixel(x+a, y-b);
-                        if (diff < 0) { // -b/a > dy/dx -> diff = a*dy+b*dx < 0
-                            let a = a+1;
-                            let diff = diff+dy;
-                        } else {
-                            let b = b+1;
-                            let diff = diff+dx;
-                        }
-                    }
-                }
+                do Screen.drawDiagonal(x1, y1, x2, y2);
             } else {
                 if (x1 = x2) {
-                    let y = Math.min(y1, y2);
-                    let dy = Math.max(y1, y2) - y;
-                    while (b < dy+1) {
-                        do Screen.drawPixel(x1, y+b);
-                        let b = b+1;
+                    if (y1 > y2) {
+                        let tmp = y1;
+                        let y1 = y2;
+                        let y2 = tmp;
                     }
+                    do Screen.drawVertical(x1, y1, y2);
                 } else { // y1 = y2
-                    if (x1 > x2) {
-                        do Screen.drawHorizonal(x2, x1, y1);
-                    } else {
-                        do Screen.drawHorizonal(x1, x2, y1);
-                    }
+                    do Screen.drawHorizontal(x1, x2, y1);
                 }
             }
             return;
         }
 
         /** this assumes x1 < x2 */ 
-        function void drawHorizonal(int x1, int x2, int y) {
+        function void drawDiagonal(int x1, int y1, int x2, int y2) {
+            var int dx, dy, a, b, diff, b_inc; 
+            let a = 0;
+            let b = 0;
+            let diff = 0;
+            let dx = x2 - x1;
+            let dy = y2 - y1;
+            if (dy > 0) {
+                let b_inc = 1;   // northeast direction (/) => southeast on screen (\)
+            } else {
+                let b_inc = -1;  // southeast direction (\) => northeast on screen (/)
+            }
+            while (~(a > dx) & (((b_inc = 1) & ~(b > dy)) | ((b_inc = -1) & ~(b < dy)))) { // a <= dx and abs(b) <= abs(dy)
+                do Screen.drawPixel(x1+a, y1+b);
+                if (diff < 0) { // b/a > dy/dx -> diff = a*dy-b*dx < 0
+                    let a = a+1;
+                    let diff = diff + Math.abs(dy);
+                } else {
+                    let b = b+b_inc;
+                    let diff = diff-dx;
+                }
+            }
+            return;
+        }
+
+        /** this assumes y1 < y2 */
+        function void drawVertical(int x, int y1, int y2) {
+            while (~(y1 > y2)) {
+                do Screen.drawPixel(x, y1);
+                let y1 = y1+1;
+            }
+            return;
+        }
+
+        /** this assumes x1 < x2 */ 
+        function void drawHorizontal(int x1, int x2, int y) {
             var int x1mod16, x2mod16, row, start, end;
                                 
             let x1mod16 = x1 & 15;
@@ -149,16 +152,16 @@ class Screen {
             let start = row + (#(#(#(#x1))));
             let end = row + (#(#(#(#x2)))) + (x2mod16=0);
             if (start = end) {
-                do Screen.drawByteSection(x1, x2, y);
+                do Screen.drawAddressSection(x1, x2, y);
             } else {
                 if (~(x1mod16 = 0)) {
                     // draw start of line
-                    do Screen.drawByteSection(x1, x1-x1mod16+16, y);
+                    do Screen.drawAddressSection(x1, x1-x1mod16+16, y); // middle of the address (=x1) to the end
                     let start = start+1;
                 }
                 if (~(x2mod16 = 0)) {
                     // draw end of line
-                    do Screen.drawByteSection(x2-x2mod16, x2, y);
+                    do Screen.drawAddressSection(x2-x2mod16, x2, y); // start of the address to the middle of the address (=x2)
                     let end = end-1;
                 }
                 while( ~(start > end) ) {     
@@ -170,8 +173,8 @@ class Screen {
             return;
         }
 
-        /** draws from x1 to x2, assumes both ints are in the same byte and x1 <= x2*/
-        function void drawByteSection(int x1, int x2, int y) {
+        /** draws from x1 to x2, assumes both ints are in the same address word and x1 <= x2*/
+        function void drawAddressSection(int x1, int x2, int y) {
             while(~(x1 > x2)) {
                 do Screen.drawPixel(x1, y);
                 let x1 = x1+1;
@@ -188,8 +191,8 @@ class Screen {
             }
             let b = 0;
             let dy = y2 - y1; // we know y2 >= y1
-            while (b > dy+1) {
-                do Screen.drawLine(x1, y1+b, x2, y1+b);
+            while (b < (dy+1)) {
+                do Screen.drawHorizontal(x1, x2, y1+b);
                 let b = b+1;
             }
             return;
@@ -197,24 +200,22 @@ class Screen {
 
         /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
         function void drawCircle(int x, int y, int r) {
-            // This can be implemented efficiently by drawing multiple lines at
-            // each iteration. You can use multiplication and sqrt.
-            // Pseudocode:
-            // 1. for (dy = -r ... r)
-            // 2.   let halfWidth = sqrt(r*r - dy*dy)
-            // 3.   do drawLine(x-halfWidth, y+dy, x+halfWidth, y+dy)
-            var int halfWidth, dy, r_sq;
+            var int halfWidth, dy;
             if (Screen.outOfBounds(x, y)) {
                 do Sys.error(12); // illegal center coords
             }
-            if (Screen.outOfBounds(x+r, y) | Screen.outOfBounds(x-r, y) | Screen.outOfBounds(x, y+r) | Screen.outOfBounds(x, y-r)) {
+            if ((r > 181) | (r < 0) | Screen.outOfBounds(x+r, y) | Screen.outOfBounds(x-r, y) | Screen.outOfBounds(x, y+r) | Screen.outOfBounds(x, y-r)) {
                 do Sys.error(13); // illegal radius
             }
+            if (r = 0) {
+                do Screen.drawPixel(x, y);
+                return;
+            }
             let dy = -r;
-            let r_sq = r*r;
             while (~(dy > r)) {
-                let halfWidth = Math.sqrt(r_sq-(dy*dy));
-                do Screen.drawLine(x-halfWidth, y+dy, x+halfWidth, y+dy);
+                let halfWidth = Math.sqrt((r*r)-(dy*dy));
+                do Screen.drawHorizontal(x-halfWidth, x+halfWidth, y+dy);
+                let dy = dy+1;
             }
             return;
         }
