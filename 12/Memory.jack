@@ -77,7 +77,8 @@ class Memory {
             let last[1] = curr+size+1; // change last pointer to new segment
             return curr+1; // return pointer
         }}
-        return -1; // TODO: ask - shouldn't we 'do Sys.error(6);'?
+        do Sys.error(6); // no block found
+        return -1;
     }
 
     /** De-allocates the given object (cast as an array) by making
